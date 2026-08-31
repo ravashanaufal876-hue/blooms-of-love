@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blooms of Love — Digital Bouquet Studio</title>
+  <meta name="description" content="Rangkai digital bouquet ala Digibouquet — pilih bunga A-Z, greenery, kartu & surat, lalu kirim via link. Color & Mono." />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="petals-bg" id="petalsBg" aria-hidden="true"></div>
+
+  <!-- Topbar ala digibouquet.org -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="#" aria-label="Beranda">
+        <span class="brand-mark">✦</span>
+        <span class="brand-text">
+          <strong>blooms of love</strong>
+          <em>digibouquet — for my mine</em>
+        </span>
+      </a>
+      <nav class="top-nav" aria-label="Navigasi">
+        <a href="#hero">Home</a>
+        <a href="#studio">Studio</a>
+        <a href="#garden">Garden</a>
+        <a href="#studio" class="nav-cta">Create</a>
+      </nav>
+      <div class="header-actions">
+        <span class="badge-count" id="bouquetCount">0 bunga</span>
+        <button class="btn btn-ghost btn-small" id="btnSave" type="button">Simpan</button>
+        <button class="btn btn-ghost btn-small" id="btnShare" type="button">Salin Link</button>
+        <button class="btn btn-primary btn-small" id="btnPreview" type="button">Preview Hadiah</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO ala digibouquet.com -->
+  <section class="hero" id="hero">
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">DIGITAL BOUQUET STUDIO — BUILT FOR MY MINE 🌸</p>
+        <h1>beautiful flowers<br><span>delivered digitally</span></h1>
+        <p class="hero-desc">
+          Rangkai buket digital dengan 26 bunga A-Z, tambahkan <em>greenery</em>, pilih kartu & tulis surat cinta — lalu kirim sebagai satu halaman hadiah yang cantik di HP. <br />
+          <strong>Antara chat dan hadiah beneran</strong>: lebih hangat dari pesan biasa, lebih cepat dari delivery toko.
+        </p>
+        <div class="hero-ctas">
+          <button class="btn btn-primary" id="heroBuildColor" type="button">BUILD A BOUQUET — COLOR</button>
+          <button class="btn btn-ghost" id="heroBuildMono" type="button">BUILD IT IN BLACK & WHITE</button>
+          <a class="btn btn-ghost" href="#garden" style="text-decoration:none">VIEW GARDEN ↓</a>
+        </div>
+        <div class="hero-meta">
+          <span>✦ No account needed</span>
+          <span>✦ Link share instan</span>
+          <span>✦ Warna & Mono</span>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="hero-bouquet-card">
+          <div class="hero-bouquet-stage" id="heroBouquetPreview">
+            <!-- mini preview injected by JS -->
+          </div>
+          <div class="hero-card-note">
+            <div class="mini-label">CARD PREVIEW</div>
+            <div class="mini-letter" id="heroLetterPreview">Untukmu — mekar pelan, indah, tak pernah layu. 🌸</div>
+          </div>
+        </div>
+        <div class="hero-caption">Dibuat dengan ♥ — ala Digibouquet, rasa Blooms of Love</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODE TOGGLE -->
+  <div class="mode-bar">
+    <div class="mode-inner">
+      <span class="mode-label">Visual tone:</span>
+      <button class="mode-btn active" data-mode="color" type="button">🎨 Color — hangat & romantis</button>
+      <button class="mode-btn" data-mode="mono" type="button">◐ Mono — tenang & editorial</button>
+      <span class="mode-hint" id="modeHint">Color: lush & celebratory</span>
+    </div>
+  </div>
+
+  <!-- STEPPER -->
+  <nav class="stepper" id="studio" aria-label="Langkah pembuatan">
+    <div class="stepper-inner">
+      <button class="step active" data-step="1" type="button"><span class="step-num">01</span><span class="step-title">Flowers <small>A–Z • 26 jenis</small></span></button>
+      <span class="step-sep">—</span>
+      <button class="step" data-step="2" type="button"><span class="step-num">02</span><span class="step-title">Greenery & Wrap <small>Daun & pembungkus</small></span></button>
+      <span class="step-sep">—</span>
+      <button class="step" data-step="3" type="button"><span class="step-num">03</span><span class="step-title">Card & Letter <small>Kartu & surat</small></span></button>
+      <span class="step-sep">—</span>
+      <button class="step" data-step="4" type="button"><span class="step-num">04</span><span class="step-title">Share <small>Link hadiah</small></span></button>
+    </div>
+  </nav>
+
+  <main class="app">
+    <!-- STEP 1: FLOWERS -->
+    <section class="card step-panel active" data-panel="1" aria-labelledby="catalogTitle">
+      <div class="card-head">
+        <h2 id="catalogTitle">Choose from a quiet library of blooms — <em style="font-weight:400; color:var(--muted)">A sampai Z</em></h2>
+        <span class="muted" id="catalogInfo">26</span>
+      </div>
+      <p class="card-sub">Mix flowers for shape, tone, and sentiment. Repeat favoritmu. Klik <b>Tambah ke Buket</b> — buket mekar live di Step 2 & hero di atas.</p>
+      <div class="controls">
+        <div class="search-wrap">
+          <span class="si">⌕</span>
+          <input id="searchInput" type="search" placeholder="Cari: Rose (cinta sejati), Lily, Peony..." autocomplete="off" />
+        </div>
+      </div>
+      <div class="alphabet" id="alphabetBar" role="tablist" aria-label="Filter abjad"></div>
+      <div class="divider"></div>
+      <div class="flower-grid" id="flowerGrid" aria-live="polite"></div>
+      <div class="panel-actions">
+        <button class="btn btn-ghost" type="button" data-goto="2">Lanjut: Greenery & Wrap →</button>
+        <span class="muted" style="font-size:12px">Tip: pilih minimal 3 bunga biar buket terasa penuh — ala Digibouquet.</span>
+      </div>
+    </section>
+
+    <!-- STEP 2: GREENERY + WRAP + CANVAS -->
+    <section class="card step-panel" data-panel="2" aria-labelledby="atelierTitle">
+      <div class="card-head">
+        <h2 id="atelierTitle">Atelier — Greenery, Wrap & Bouquet Canvas</h2>
+        <button class="btn btn-ghost btn-small" id="btnClearBouquet" type="button">Kosongkan Buket</button>
+      </div>
+      <p class="card-sub">Atur daun (greenery) untuk memberi napas pada buket — lalu pilih pembungkus & pita. Drag bunga di canvas untuk atur posisi, rotasi & skala.</p>
+
+      <div class="atelier-grid">
+        <div class="atelier-controls">
+          <div class="field">
+            <label>Greenery — pilih gaya daun</label>
+            <div class="bouquet-controls" id="greeneryChoices">
+              <button class="chip active" data-greenery="leafy" type="button"><span class="dot" style="background:#7BA17D"></span> Leafy</button>
+              <button class="chip" data-greenery="fern" type="button"><span class="dot" style="background:#5A7D5A"></span> Fern</button>
+              <button class="chip" data-greenery="eucalyptus" type="button"><span class="dot" style="background:#A8C3B9"></span> Eucalyptus</button>
+              <button class="chip" data-greenery="willow" type="button"><span class="dot" style="background:#C9D6A5"></span> Willow</button>
+            </div>
+            <p class="muted" style="font-size:11px; margin:6px 0 0">Greenery memberi frame seperti di Digibouquet — Leafy penuh, Eucalyptus kalem, Fern airy.</p>
+          </div>
+
+          <div class="field">
+            <label>Pembungkus (Wrap)</label>
+            <div class="bouquet-controls" id="wrapperChoices">
+              <button class="chip active" data-wrapper="kraft" type="button"><span class="dot" style="background:#D4A373"></span> Kraft Paper</button>
+              <button class="chip" data-wrapper="silk" type="button"><span class="dot" style="background:#E8D9E3"></span> Soft Silk</button>
+              <button class="chip" data-wrapper="vintage" type="button"><span class="dot" style="background:#FFF8E7"></span> Vintage</button>
+              <button class="chip" data-wrapper="satin" type="button"><span class="dot" style="background:#FFE3EA"></span> Satin</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Pita (Ribbon)</label>
+            <div class="bouquet-controls" id="ribbonChoices">
+              <button class="chip active" data-ribbon="rose" type="button"><span class="dot" style="background:#111"></span> Rose</button>
+              <button class="chip" data-ribbon="gold" type="button"><span class="dot" style="background:#D4A373"></span> Gold</button>
+              <button class="chip" data-ribbon="burgundy" type="button"><span class="dot" style="background:#7A1C2E"></span> Burgundy</button>
+              <button class="chip" data-ribbon="cream" type="button"><span class="dot" style="background:#FFF8E7"></span> Cream</button>
+            </div>
+          </div>
+
+          <div class="bouquet-list" id="bouquetList"></div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px">
+            <button class="btn btn-ghost btn-small" id="btnPetal" type="button">Hujan Kelopak</button>
+            <button class="btn btn-ghost btn-small" id="btnSparkle" type="button">Sparkle</button>
+            <button class="btn btn-ghost btn-small" id="btnShuffle" type="button">Acak Posisi</button>
+          </div>
+        </div>
+
+        <div class="atelier-stage">
+          <div class="bouquet-stage" id="bouquetStage" aria-label="Canvas buket">
+            <div class="greenery-layer" id="greeneryLayer" aria-hidden="true"></div>
+            <div class="wrapper-layer kraft" id="wrapperLayer"></div>
+            <div class="ribbon rose" id="ribbonEl">WITH LOVE</div>
+            <div class="bouquet-flowers" id="bouquetFlowers"></div>
+            <div class="empty-hint" id="emptyHint">
+              <div style="font-size:22px">🌷</div>
+              <div style="font-weight:700">Buket masih kosong</div>
+              <p>Tambahkan bunga di Step 1. Bunga akan mekar di sini ✨</p>
+            </div>
+          </div>
+          <div class="muted" style="font-size:11px; text-align:center; margin-top:8px">Drag bunga untuk atur posisi • Scroll daftar untuk skala & rotasi</div>
+        </div>
+      </div>
+
+      <div class="panel-actions">
+        <button class="btn btn-ghost" type="button" data-goto="1">← Kembali</button>
+        <button class="btn btn-primary" type="button" data-goto="3">Lanjut: Card & Letter →</button>
+      </div>
+    </section>
+
+    <!-- STEP 3: CARD & LETTER -->
+    <section class="card step-panel" data-panel="3" aria-labelledby="letterTitle">
+      <div class="card-head">
+        <h2 id="letterTitle">Card & Letter — pilih kertas, tulis rasa</h2>
+        <span class="muted" id="sealHint" style="font-size:12px">Klik segel untuk buka</span>
+      </div>
+      <p class="card-sub">Seperti Digibouquet: pilih <em>card style</em>, lalu tulis pesanmu. Amplop dengan <b>wax seal</b> tetap ada — klik untuk animasi buka.</p>
+
+      <div class="letter-grid">
+        <div class="letter-form">
+          <div class="field">
+            <label>Card style — seperti Digibouquet</label>
+            <div class="card-styles" id="cardStyles">
+              <button class="card-style active" data-card="ivory" type="button">
+                <span class="cs-preview" style="background:#FFFEF7; border-color:#E8DCC2"></span>
+                <strong>Ivory</strong><small>Minimal, bersih</small>
+              </button>
+              <button class="card-style" data-card="parchment" type="button">
+                <span class="cs-preview" style="background:linear-gradient(180deg,#FFFBEB,#FDE6B8); border-color:#E8DCC2"></span>
+                <strong>Parchment</strong><small>Love letter</small>
+              </button>
+              <button class="card-style" data-card="blush" type="button">
+                <span class="cs-preview" style="background:#FFF0F3; border-color:#F4C2CC"></span>
+                <strong>Blush</strong><small>Romantis</small>
+              </button>
+              <button class="card-style" data-card="botanical" type="button">
+                <span class="cs-preview" style="background:radial-gradient(300px 120px at 50% 0%, #EAF6EC, #FFFEF7); border-color:#CDE3D0"></span>
+                <strong>Botanical</strong><small>Press hijau</small>
+              </button>
+              <button class="card-style" data-card="midnight" type="button">
+                <span class="cs-preview" style="background:#111; border-color:#333"></span>
+                <strong>Midnight</strong><small>Editorial mono</small>
+              </button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="recipientInput">Untuk</label>
+            <input id="recipientInput" type="text" placeholder="For My Beloved..." value="For My Beloved" />
+          </div>
+          <div class="field">
+            <label for="messageInput">Isi Pesan</label>
+            <textarea id="messageInput" placeholder="Tulis kata hatimu... boleh pakai emoji 🌹✨">Hai sayang,
+
+Terima kasih sudah jadi rumah paling nyaman untuk hatiku. Setiap detik bersamamu adalah bunga yang mekar — pelan, indah, dan tak pernah layu.
+
+Buket ini aku rangkai satu per satu, seperti janji-janji kecilku untuk menjagamu, mendengarmu, dan mencintaimu lebih baik setiap hari. 🌸
+
+Selalu milikmu,</textarea>
+          </div>
+          <div class="field">
+            <label for="senderInput">Dari</label>
+            <input id="senderInput" type="text" placeholder="Nama pengirim..." value="Dari Aku yang Selalu Mencintaimu" />
+          </div>
+          <div class="field">
+            <label>Pilihan Font Surat</label>
+            <div class="font-pills" id="fontPills">
+              <button type="button" class="font-pill active" data-font="dancing">Dancing Script — Romantis</button>
+              <button type="button" class="font-pill" data-font="vibes">Great Vibes — Elegan</button>
+              <button type="button" class="font-pill" data-font="playfair">Playfair — Klasik</button>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px">
+            <button class="btn btn-ghost btn-small" id="btnClearText" type="button">Kosongkan Teks</button>
+            <button class="btn btn-ghost btn-small" id="btnSampleText" type="button">Contoh Pesan Manis</button>
+          </div>
+        </div>
+
+        <div class="letter-preview-col">
+          <div class="envelope-scene">
+            <div class="envelope" id="envelope" role="button" tabindex="0" aria-label="Buka tutup amplop">
+              <div class="envelope-body"></div>
+              <div class="flap"></div>
+              <div class="seal" id="seal">❤</div>
+            </div>
+          </div>
+          <div class="letter-paper card-ivory" id="letterPaper">
+            <div class="letter-to">Untuk: <strong id="letterTo">For My Beloved</strong></div>
+            <div class="letter-body font-dancing" id="letterBody">Hai sayang, ...</div>
+            <div class="letter-from">Dari: <strong id="letterFrom">Dari Aku yang Selalu Mencintaimu</strong></div>
+          </div>
+          <div class="muted" style="font-size:11px; margin-top:8px">Live preview — teks update otomatis saat kamu mengetik.</div>
+        </div>
+      </div>
+
+      <div class="panel-actions">
+        <button class="btn btn-ghost" type="button" data-goto="2">← Kembali</button>
+        <button class="btn btn-primary" id="btnGoPreview" type="button">Preview & Share →</button>
+      </div>
+    </section>
+
+    <!-- GARDEN -->
+    <section class="card" id="garden" aria-labelledby="gardenTitle">
+      <div class="card-head">
+        <h2 id="gardenTitle">Garden — buket yang pernah dibuat</h2>
+        <span class="muted" style="font-size:12px">Tersimpan di browser ini</span>
+      </div>
+      <p class="card-sub">Seperti Digibouquet Garden: setiap buket yang kamu simpan muncul di sini. Klik untuk muat lagi ke studio.</p>
+      <div class="garden-grid" id="gardenGrid"></div>
+      <div class="divider"></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; padding:0 16px 16px">
+        <button class="btn btn-ghost btn-small" id="btnSaveGarden" type="button">+ Simpan Buket Sekarang ke Garden</button>
+        <button class="btn btn-ghost btn-small" id="btnClearGarden" type="button">Hapus Garden</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- PREVIEW OVERLAY (Step 4) -->
+  <div class="preview-overlay" id="previewOverlay" aria-hidden="true">
+    <div class="preview-shell">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
+        <div>
+          <div style="font-size:11px; letter-spacing:.7px; text-transform:uppercase; color:var(--muted); font-weight:700">Gift Preview — halaman yang akan diterima</div>
+          <h2 class="preview-title">Hadiah Untukmu, <span id="previewTo">Beloved</span> 🌸</h2>
+          <p class="preview-sub">Tampilan akhir yang akan dilihat penerima. Salin link dan kirim!</p>
+        </div>
+        <div style="display:flex; gap:8px">
+          <button class="btn btn-ghost" id="btnClosePreview" type="button">✕ Tutup</button>
+          <button class="btn btn-primary" id="btnCopyPreview" type="button">Salin Link</button>
+        </div>
+      </div>
+
+      <div class="preview-grid">
+        <div class="preview-card">
+          <div class="pad">
+            <div style="font-weight:700; letter-spacing:.2px">💐 Bouquet</div>
+            <div class="preview-bouquet" id="previewBouquet"></div>
+            <div class="muted" style="font-size:12px; margin-top:10px" id="previewBouquetMeta">—</div>
+          </div>
+        </div>
+        <div class="preview-card">
+          <div class="pad">
+            <div style="font-weight:700; letter-spacing:.2px">💌 Card</div>
+            <div class="letter-paper" id="previewLetterPaper" style="margin-top:12px">
+              <div class="letter-to">Untuk: <strong id="previewLetterTo">—</strong></div>
+              <div class="letter-body" id="previewLetterBody">—</div>
+              <div class="letter-from">Dari: <strong id="previewLetterFrom">—</strong></div>
+            </div>
+            <div class="share-row">
+              <input id="shareLinkInput" readonly placeholder="Link hadiah akan muncul di sini..." />
+              <button class="btn btn-ghost btn-small" id="btnCopyLink2" type="button">Salin</button>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px">
+              <button class="btn btn-ghost btn-small" id="btnDownloadCard" type="button">Cetak / PDF</button>
+              <button class="btn btn-ghost btn-small" id="btnPetalsPreview" type="button">Hujan Kelopak</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-card" style="margin-top:18px">
+        <div class="pad" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
+          <div>
+            <div style="font-weight:700">Siap dikirim? ✨</div>
+            <div class="muted" style="font-size:12px">Link berisi semua pilihan (ter-encode di URL). Penerima tinggal buka link.</div>
+          </div>
+          <div style="display:flex; gap:8px">
+            <button class="btn btn-ghost" id="btnClosePreview2" type="button">Kembali Edit</button>
+            <button class="btn btn-primary" id="btnWhatsApp" type="button">Kirim via WhatsApp</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <footer class="footer">
+    <div style="max-width:980px; margin:0 auto; padding:18px 14px 26px; text-align:center; line-height:1.6">
+      <div style="font-family:'Cormorant Garamond',serif; font-size:18px; letter-spacing:.2px">blooms of love — digibouquet for my mine</div>
+      <div class="muted" style="font-size:12px">Inspired by Digibouquet • Built with vanilla HTML/CSS/JS • localStorage auto-save • klik segel lilin untuk buka surat • drag bunga di canvas</div>
+      <div style="margin-top:8px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; font-size:12px">
+        <a href="#hero">Home</a><span>•</span><a href="#studio">Studio</a><span>•</span><a href="#garden">Garden</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/flowers-data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
