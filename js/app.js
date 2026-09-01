@@ -90,6 +90,20 @@
     goStep(state.step || 1);
     spawnAmbientPetals();
     renderHeroPreview();
+    // Jika dibuka via link share (?gift=), langsung tampilkan mode hadiah ala Digibouquet — biar pacar tidak lihat editor
+    if(fromURL){
+      // delay sedikit biar DOM siap, lalu auto-buka preview + sembunyikan hero/stepper untuk kesan hadiah bersih
+      setTimeout(()=>{
+        const openPreview = window._openPreview || null;
+        if(openPreview) openPreview();
+        else {
+          const ov = document.getElementById('previewOverlay');
+          if(ov){ ov.classList.add('open'); ov.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; }
+        }
+        document.documentElement.classList.add('gift-mode');
+        showToast('Hadiah dibuka 💌 — klik ✕ untuk lihat studio');
+      }, 450);
+    }
   }
 
   // persistence
@@ -696,6 +710,9 @@
       document.body.style.overflow='';
       playClickSound();
     };
+    // expose for auto-open gift link
+    window._openPreview = openPreview;
+    window._closePreview = closePreview;
     $('#btnPreview').addEventListener('click', openPreview);
     $('#btnGoPreview').addEventListener('click', openPreview);
     $('#btnClosePreview').addEventListener('click', closePreview);
