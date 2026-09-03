@@ -136,10 +136,28 @@
       if(raw) state.garden = JSON.parse(raw);
     } catch(e){ state.garden=[]; }
   }
+  function compressPayload(obj){
+    const json = JSON.stringify(obj);
+    // pakai LZ-String kalau ada (hasil ~40% lebih pendek dari base64 biasa)
+    if(window.LZString && window.LZString.compressToEncodedURIComponent){
+      return 'lz:' + window.LZString.compressToEncodedURIComponent(json);
+    }
+    return btoa(unescape(encodeURIComponent(json)));
+  }
+  function decompressPayload(str){
+    if(str.startsWith('lz:')){
+      if(window.LZString && window.LZString.decompressFromEncodedURIComponent){
+        const dec = window.LZString.decompressFromEncodedURIComponent(str.slice(3));
+        if(dec) return dec;
+      }
+      return null;
+    }
+    try{ return decodeURIComponent(escape(atob(str))); } catch(e){ return null; }
+  }
   function encodeStateToURL(){
-    const payload = btoa(unescape(encodeURIComponent(JSON.stringify({
+    const payload = compressPayload({
       b:state.bouquet, w:state.wrapper, r:state.ribbon, g:state.greenery, cs:state.cardStyle, m:state.mode, l:state.letter
-    }))));
+    });
     const url = new URL(location.href);
     url.searchParams.set('gift', payload);
     // clean garden etc
@@ -150,8 +168,9 @@
     const g = sp.get('gift');
     if(!g) return false;
     try{
-      const json = decodeURIComponent(escape(atob(g)));
-      const data = JSON.parse(json);
+      const raw = decompressPayload(g);
+      if(!raw) return false;
+      const data = JSON.parse(raw);
       if(Array.isArray(data.b)) state.bouquet = data.b;
       if(data.w) state.wrapper = data.w;
       if(data.r) state.ribbon = data.r;
@@ -681,21 +700,57 @@
       saveToLS(); renderAll(); goStep(2); showToast('Bouquet dari Garden dimuat ✨'); playClickSound();
     });
 
-    const copyLink = async (link)=>{
-      const l = link || encodeStateToURL();
+    // — short link via is.gd (free, no key, CORS ok)
+    async function shortenViaIsGd(longUrl){
       try{
-        await navigator.clipboard.writeText(l);
-        if(el.shareLinkInput) el.shareLinkInput.value = l;
-        showToast('Link hadiah disalin! 🔗');
+        const api = 'https://is.gd/create.php?format=json&url=' + encodeURIComponent(longUrl);
+        const res = await fetch(api);
+        if(!res.ok) return null;
+        const j = await res.json();
+        return j.shorturl || j.shortUrl || null;
+      } catch(e){ return null; }
+    }
+    const copyLink = async (link, opts={})=>{
+      const l = link || encodeStateToURL();
+      const wantShort = opts.short === true;
+      let toCopy = l;
+      let shortUrl = null;
+      if(wantShort){
+        showToast('Memperpendek link... ⏳');
+        shortUrl = await shortenViaIsGd(l);
+        if(shortUrl) toCopy = shortUrl;
+      }
+      try{
+        await navigator.clipboard.writeText(toCopy);
+        if(el.shareLinkInput) el.shareLinkInput.value = toCopy;
+        if(wantShort && shortUrl) showToast('Link pendek disalin! 🔗✨ ' + shortUrl);
+        else if(wantShort && !shortUrl) showToast('Gagal pendek, link panjang disalin 🔗');
+        else showToast('Link hadiah disalin! 🔗');
       } catch{
-        if(el.shareLinkInput){ el.shareLinkInput.value = l; el.shareLinkInput.select(); document.execCommand('copy'); }
+        if(el.shareLinkInput){ el.shareLinkInput.value = toCopy; el.shareLinkInput.select(); document.execCommand('copy'); }
         showToast('Link disalin (fallback) 🔗');
       }
+      // tampilkan info panjang vs pendek di console biar user tau kompresinya
+      if(l !== toCopy) console.log('Long:', l.length, 'Short:', toCopy.length);
       playClickSound();
+      return toCopy;
     };
-    $('#btnShare').addEventListener('click', ()=> copyLink());
-    $('#btnCopyPreview').addEventListener('click', ()=> copyLink());
-    $('#btnCopyLink2').addEventListener('click', ()=> copyLink(el.shareLinkInput.value));
+    $('#btnShare').addEventListener('click', ()=> copyLink(null, {short:true}));
+    $('#btnCopyPreview').addEventListener('click', ()=> copyLink(null, {short:true}));
+    $('#btnCopyLink2').addEventListener('click', ()=> copyLink(el.shareLinkInput.value, {short:false}));
+    // tombol extra “Perpendek” kalau user mau manual
+    const btnShort = document.createElement('button');
+    btnShort.type='button'; btnShort.className='btn btn-ghost btn-small'; btnShort.id='btnShortLink';
+    btnShort.textContent='✨ Perpendek Link';
+    btnShort.title='Bikin versi is.gd (contoh: https://is.gd/xxxx)';
+    if(el.shareLinkInput && el.shareLinkInput.parentElement){
+      el.shareLinkInput.parentElement.appendChild(btnShort);
+      btnShort.addEventListener('click', async ()=>{
+        const longUrl = encodeStateToURL();
+        el.shareLinkInput.value = longUrl;
+        await copyLink(longUrl, {short:true});
+      });
+    }
 
     const openPreview = ()=>{
       renderPreviewBouquet(); renderLetter(); updateShareLink();
