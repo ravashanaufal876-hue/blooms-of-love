@@ -268,15 +268,14 @@ button{font:inherit}
 }
 .bouquet-stage.mono{filter:grayscale(1)}
 .greenery-layer{
-  position:absolute; inset:18% 18% 18% 18%; border-radius:50%;
-  opacity:.0; pointer-events:none; transition:.25s;
-  border:1px dashed rgba(0,0,0,.06);
+  position:absolute; left:50%; top:44%; transform:translate(-50%,-50%);
+  width:min(300px, 82%); height:min(300px, 68%);
+  display:grid; place-items:center;
+  opacity:0; pointer-events:none; transition:.25s opacity;
+  z-index:3;
 }
 .greenery-layer.show{opacity:1}
-.greenery-layer.leafy{background: radial-gradient(circle at 50% 50%, rgba(123,161,125,.14), transparent 62%)}
-.greenery-layer.fern{background: radial-gradient(circle at 50% 50%, rgba(90,125,90,.13), transparent 64%)}
-.greenery-layer.eucalyptus{background: radial-gradient(circle at 50% 55%, rgba(168,195,185,.18), transparent 62%)}
-.greenery-layer.willow{background: radial-gradient(circle at 50% 58%, rgba(201,214,165,.18), transparent 62%)}
+.greenery-layer svg{width:100%; height:100%; display:block; filter:drop-shadow(0 6px 12px rgba(90,125,90,.18))}
 .wrapper-layer{
   position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
   width:220px; height:220px; border-radius: 18px 18px 42px 42px / 18px 18px 62px 62px;

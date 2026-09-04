@@ -111,7 +111,72 @@ const CARD_STYLES = [
   { id:'midnight', name:'Midnight', desc:'Editorial mono' },
 ];
 
+// SVG daun beneran — biar greenery kelihatan, bukan cuma glow samar
+function greenerySVG(type){
+  const common = `xmlns="http://www.w3.org/2000/svg" aria-hidden="true"`;
+  if(type==='fern'){
+    return `<svg viewBox="0 0 220 220" width="100%" height="100%" ${common}>
+      <g fill="none" stroke="#5A7D5A" stroke-width="3" stroke-linecap="round" opacity="0.95">
+        <path d="M110 190 Q110 120 60 70"/><path d="M110 190 Q110 120 160 70"/>
+        <path d="M110 190 Q100 120 40 100"/><path d="M110 190 Q120 120 180 100"/>
+        <path d="M110 190 L110 50"/>
+      </g>
+      <g fill="#6B9A6B" opacity="0.95">
+        <ellipse cx="60" cy="70" rx="7" ry="16" transform="rotate(-38 60 70)"/><ellipse cx="160" cy="70" rx="7" ry="16" transform="rotate(38 160 70)"/>
+        <ellipse cx="40" cy="100" rx="6" ry="14" transform="rotate(-62 40 100)"/><ellipse cx="180" cy="100" rx="6" ry="14" transform="rotate(62 180 100)"/>
+        <ellipse cx="82" cy="105" rx="6" ry="13" transform="rotate(-24 82 105)"/><ellipse cx="138" cy="105" rx="6" ry="13" transform="rotate(24 138 105)"/>
+        <ellipse cx="95" cy="80" rx="5" ry="12" transform="rotate(-12 95 80)"/><ellipse cx="125" cy="80" rx="5" ry="12" transform="rotate(12 125 80)"/>
+        <ellipse cx="110" cy="52" rx="6" ry="13"/>
+      </g>
+    </svg>`;
+  }
+  if(type==='eucalyptus'){
+    return `<svg viewBox="0 0 220 220" width="100%" height="100%" ${common}>
+      <g fill="none" stroke="#8AAFA1" stroke-width="3" stroke-linecap="round" opacity="0.95">
+        <path d="M85 195 Q80 130 70 60"/><path d="M135 195 Q140 130 150 60"/><path d="M110 195 L110 45"/>
+      </g>
+      <g fill="#A8C3B9" stroke="#7FA396" stroke-width="1" opacity="0.98">
+        <circle cx="70" cy="60" r="14"/><circle cx="150" cy="60" r="14"/><circle cx="110" cy="45" r="15"/>
+        <circle cx="77" cy="100" r="12"/><circle cx="143" cy="100" r="12"/>
+        <circle cx="82" cy="138" r="11"/><circle cx="138" cy="138" r="11"/>
+        <circle cx="110" cy="85" r="12"/><circle cx="110" cy="120" r="11"/>
+      </g>
+      <g fill="white" opacity="0.35"><circle cx="105" cy="40" r="3"/><circle cx="65" cy="55" r="2.5"/><circle cx="145" cy="55" r="2.5"/></g>
+    </svg>`;
+  }
+  if(type==='willow'){
+    return `<svg viewBox="0 0 220 220" width="100%" height="100%" ${common}>
+      <g fill="none" stroke-linecap="round" opacity="0.95">
+        <path d="M60 40 Q50 110 58 185" stroke="#8AA86B" stroke-width="3"/>
+        <path d="M110 30 Q110 110 110 190" stroke="#8AA86B" stroke-width="3"/>
+        <path d="M160 40 Q170 110 162 185" stroke="#8AA86B" stroke-width="3"/>
+      </g>
+      <g fill="#9DBE7F" opacity="0.96">
+        <ellipse cx="58" cy="90" rx="5" ry="16" transform="rotate(-8 58 90)"/><ellipse cx="58" cy="125" rx="5" ry="16" transform="rotate(8 58 125)"/><ellipse cx="58" cy="160" rx="5" ry="15"/>
+        <ellipse cx="110" cy="80" rx="5" ry="17"/><ellipse cx="110" cy="118" rx="5" ry="17"/><ellipse cx="110" cy="156" rx="5" ry="16"/>
+        <ellipse cx="162" cy="90" rx="5" ry="16" transform="rotate(8 162 90)"/><ellipse cx="162" cy="125" rx="5" ry="16" transform="rotate(-8 162 125)"/><ellipse cx="162" cy="160" rx="5" ry="15"/>
+      </g>
+    </svg>`;
+  }
+  // leafy (default) — penuh & hangat
+  return `<svg viewBox="0 0 220 220" width="100%" height="100%" ${common}>
+    <g fill="#7BA17D" stroke="#5C7F5E" stroke-width="1" opacity="0.98">
+      <ellipse cx="55" cy="90" rx="20" ry="34" transform="rotate(-28 55 90)"/>
+      <ellipse cx="165" cy="90" rx="20" ry="34" transform="rotate(28 165 90)"/>
+      <ellipse cx="75" cy="60" rx="18" ry="30" transform="rotate(-14 75 60)"/>
+      <ellipse cx="145" cy="60" rx="18" ry="30" transform="rotate(14 145 60)"/>
+      <ellipse cx="110" cy="48" rx="19" ry="32"/>
+      <ellipse cx="40" cy="130" rx="16" ry="28" transform="rotate(-42 40 130)"/>
+      <ellipse cx="180" cy="130" rx="16" ry="28" transform="rotate(42 180 130)"/>
+    </g>
+    <g fill="none" stroke="#4E6E50" stroke-width="1.4" opacity="0.7">
+      <path d="M55 62 L55 118"/><path d="M165 62 L165 118"/><path d="M110 18 L110 78"/>
+    </g>
+  </svg>`;
+}
+
 window.FLOWERS = FLOWERS;
 window.flowerSVG = flowerSVG;
+window.greenerySVG = greenerySVG;
 window.GREENERIES = GREENERIES;
 window.CARD_STYLES = CARD_STYLES;
