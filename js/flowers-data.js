@@ -111,66 +111,103 @@ const CARD_STYLES = [
   { id:'midnight', name:'Midnight', desc:'Editorial mono' },
 ];
 
-// SVG daun beneran — biar greenery kelihatan, bukan cuma glow samar
+// SVG daun rimbun & padat — 2 lapis (belakang gelap + depan terang) biar penuh
 function greenerySVG(type){
   const common = `xmlns="http://www.w3.org/2000/svg" aria-hidden="true"`;
   if(type==='fern'){
     return `<svg viewBox="0 0 220 220" width="100%" height="100%" ${common}>
-      <g fill="none" stroke="#5A7D5A" stroke-width="3" stroke-linecap="round" opacity="0.95">
-        <path d="M110 190 Q110 120 60 70"/><path d="M110 190 Q110 120 160 70"/>
-        <path d="M110 190 Q100 120 40 100"/><path d="M110 190 Q120 120 180 100"/>
-        <path d="M110 190 L110 50"/>
+      <g fill="none" stroke="#4E6E50" stroke-width="3.5" stroke-linecap="round" opacity="0.95">
+        <path d="M110 195 Q110 120 55 60"/><path d="M110 195 Q110 120 165 60"/>
+        <path d="M110 195 Q95 125 30 95"/><path d="M110 195 Q125 125 190 95"/>
+        <path d="M110 195 Q100 130 60 130"/><path d="M110 195 Q120 130 160 130"/>
+        <path d="M110 195 L110 38"/><path d="M110 195 Q90 140 85 70"/><path d="M110 195 Q130 140 135 70"/>
       </g>
-      <g fill="#6B9A6B" opacity="0.95">
-        <ellipse cx="60" cy="70" rx="7" ry="16" transform="rotate(-38 60 70)"/><ellipse cx="160" cy="70" rx="7" ry="16" transform="rotate(38 160 70)"/>
-        <ellipse cx="40" cy="100" rx="6" ry="14" transform="rotate(-62 40 100)"/><ellipse cx="180" cy="100" rx="6" ry="14" transform="rotate(62 180 100)"/>
-        <ellipse cx="82" cy="105" rx="6" ry="13" transform="rotate(-24 82 105)"/><ellipse cx="138" cy="105" rx="6" ry="13" transform="rotate(24 138 105)"/>
-        <ellipse cx="95" cy="80" rx="5" ry="12" transform="rotate(-12 95 80)"/><ellipse cx="125" cy="80" rx="5" ry="12" transform="rotate(12 125 80)"/>
-        <ellipse cx="110" cy="52" rx="6" ry="13"/>
+      <g fill="#4E7A50" opacity="0.95">
+        <ellipse cx="55" cy="60" rx="8" ry="18" transform="rotate(-35 55 60)"/><ellipse cx="165" cy="60" rx="8" ry="18" transform="rotate(35 165 60)"/>
+        <ellipse cx="30" cy="95" rx="7" ry="16" transform="rotate(-60 30 95)"/><ellipse cx="190" cy="95" rx="7" ry="16" transform="rotate(60 190 95)"/>
+        <ellipse cx="60" cy="130" rx="7" ry="15" transform="rotate(-30 60 130)"/><ellipse cx="160" cy="130" rx="7" ry="15" transform="rotate(30 160 130)"/>
+        <ellipse cx="110" cy="38" rx="7" ry="15"/><ellipse cx="85" cy="70" rx="6" ry="14" transform="rotate(-15 85 70)"/><ellipse cx="135" cy="70" rx="6" ry="14" transform="rotate(15 135 70)"/>
+      </g>
+      <g fill="#7CB47E" opacity="0.98">
+        <ellipse cx="72" cy="88" rx="6" ry="14" transform="rotate(-25 72 88)"/><ellipse cx="148" cy="88" rx="6" ry="14" transform="rotate(25 148 88)"/>
+        <ellipse cx="50" cy="115" rx="5.5" ry="13" transform="rotate(-45 50 115)"/><ellipse cx="170" cy="115" rx="5.5" ry="13" transform="rotate(45 170 115)"/>
+        <ellipse cx="92" cy="112" rx="5.5" ry="13" transform="rotate(-18 92 112)"/><ellipse cx="128" cy="112" rx="5.5" ry="13" transform="rotate(18 128 112)"/>
+        <ellipse cx="98" cy="60" rx="5" ry="12" transform="rotate(-10 98 60)"/><ellipse cx="122" cy="60" rx="5" ry="12" transform="rotate(10 122 60)"/>
+        <ellipse cx="110" cy="68" rx="5.5" ry="13"/><ellipse cx="110" cy="100" rx="5.5" ry="13"/><ellipse cx="110" cy="132" rx="5.5" ry="12"/>
+        <ellipse cx="80" cy="150" rx="5" ry="12" transform="rotate(-20 80 150)"/><ellipse cx="140" cy="150" rx="5" ry="12" transform="rotate(20 140 150)"/>
       </g>
     </svg>`;
   }
   if(type==='eucalyptus'){
     return `<svg viewBox="0 0 220 220" width="100%" height="100%" ${common}>
-      <g fill="none" stroke="#8AAFA1" stroke-width="3" stroke-linecap="round" opacity="0.95">
-        <path d="M85 195 Q80 130 70 60"/><path d="M135 195 Q140 130 150 60"/><path d="M110 195 L110 45"/>
+      <g fill="none" stroke="#7FA396" stroke-width="3.5" stroke-linecap="round" opacity="0.95">
+        <path d="M70 198 Q65 130 58 50"/><path d="M150 198 Q155 130 162 50"/>
+        <path d="M90 198 Q88 130 84 55"/><path d="M130 198 Q132 130 136 55"/><path d="M110 198 L110 35"/>
       </g>
-      <g fill="#A8C3B9" stroke="#7FA396" stroke-width="1" opacity="0.98">
-        <circle cx="70" cy="60" r="14"/><circle cx="150" cy="60" r="14"/><circle cx="110" cy="45" r="15"/>
-        <circle cx="77" cy="100" r="12"/><circle cx="143" cy="100" r="12"/>
-        <circle cx="82" cy="138" r="11"/><circle cx="138" cy="138" r="11"/>
-        <circle cx="110" cy="85" r="12"/><circle cx="110" cy="120" r="11"/>
+      <g fill="#8FB5A8" stroke="#6E9386" stroke-width="1" opacity="0.95">
+        <circle cx="58" cy="50" r="15"/><circle cx="162" cy="50" r="15"/><circle cx="84" cy="55" r="13"/><circle cx="136" cy="55" r="13"/>
+        <circle cx="62" cy="90" r="13"/><circle cx="158" cy="90" r="13"/><circle cx="110" cy="35" r="16"/>
+        <circle cx="68" cy="128" r="12"/><circle cx="152" cy="128" r="12"/>
       </g>
-      <g fill="white" opacity="0.35"><circle cx="105" cy="40" r="3"/><circle cx="65" cy="55" r="2.5"/><circle cx="145" cy="55" r="2.5"/></g>
+      <g fill="#C2D8D0" stroke="#8FB5A8" stroke-width="1" opacity="0.99">
+        <circle cx="84" cy="92" r="13"/><circle cx="136" cy="92" r="13"/><circle cx="110" cy="72" r="14"/>
+        <circle cx="90" cy="128" r="12"/><circle cx="130" cy="128" r="12"/><circle cx="110" cy="108" r="13"/>
+        <circle cx="94" cy="162" r="11"/><circle cx="126" cy="162" r="11"/><circle cx="110" cy="142" r="12"/>
+      </g>
+      <g fill="white" opacity="0.4"><circle cx="104" cy="30" r="3"/><circle cx="53" cy="45" r="2.5"/><circle cx="157" cy="45" r="2.5"/><circle cx="79" cy="87" r="2.5"/><circle cx="131" cy="87" r="2.5"/></g>
     </svg>`;
   }
   if(type==='willow'){
     return `<svg viewBox="0 0 220 220" width="100%" height="100%" ${common}>
       <g fill="none" stroke-linecap="round" opacity="0.95">
-        <path d="M60 40 Q50 110 58 185" stroke="#8AA86B" stroke-width="3"/>
-        <path d="M110 30 Q110 110 110 190" stroke="#8AA86B" stroke-width="3"/>
-        <path d="M160 40 Q170 110 162 185" stroke="#8AA86B" stroke-width="3"/>
+        <path d="M35 35 Q28 110 36 190" stroke="#7A9A5B" stroke-width="3"/>
+        <path d="M62 30 Q56 110 62 190" stroke="#7A9A5B" stroke-width="3"/>
+        <path d="M88 25 Q86 110 88 192" stroke="#7A9A5B" stroke-width="3"/>
+        <path d="M110 22 Q110 110 110 192" stroke="#7A9A5B" stroke-width="3.2"/>
+        <path d="M132 25 Q134 110 132 192" stroke="#7A9A5B" stroke-width="3"/>
+        <path d="M158 30 Q164 110 158 190" stroke="#7A9A5B" stroke-width="3"/>
+        <path d="M185 35 Q192 110 184 190" stroke="#7A9A5B" stroke-width="3"/>
       </g>
-      <g fill="#9DBE7F" opacity="0.96">
-        <ellipse cx="58" cy="90" rx="5" ry="16" transform="rotate(-8 58 90)"/><ellipse cx="58" cy="125" rx="5" ry="16" transform="rotate(8 58 125)"/><ellipse cx="58" cy="160" rx="5" ry="15"/>
-        <ellipse cx="110" cy="80" rx="5" ry="17"/><ellipse cx="110" cy="118" rx="5" ry="17"/><ellipse cx="110" cy="156" rx="5" ry="16"/>
-        <ellipse cx="162" cy="90" rx="5" ry="16" transform="rotate(8 162 90)"/><ellipse cx="162" cy="125" rx="5" ry="16" transform="rotate(-8 162 125)"/><ellipse cx="162" cy="160" rx="5" ry="15"/>
+      <g fill="#7FA35F" opacity="0.94">
+        <ellipse cx="36" cy="80" rx="5.5" ry="16"/><ellipse cx="36" cy="115" rx="5.5" ry="16"/><ellipse cx="36" cy="150" rx="5.5" ry="15"/><ellipse cx="36" cy="180" rx="5" ry="13"/>
+        <ellipse cx="62" cy="75" rx="5.5" ry="16"/><ellipse cx="62" cy="110" rx="5.5" ry="16"/><ellipse cx="62" cy="145" rx="5.5" ry="15"/><ellipse cx="62" cy="178" rx="5" ry="13"/>
+        <ellipse cx="158" cy="75" rx="5.5" ry="16"/><ellipse cx="158" cy="110" rx="5.5" ry="16"/><ellipse cx="158" cy="145" rx="5.5" ry="15"/><ellipse cx="158" cy="178" rx="5" ry="13"/>
+        <ellipse cx="184" cy="80" rx="5.5" ry="16"/><ellipse cx="184" cy="115" rx="5.5" ry="16"/><ellipse cx="184" cy="150" rx="5.5" ry="15"/><ellipse cx="184" cy="180" rx="5" ry="13"/>
+      </g>
+      <g fill="#A9C98A" opacity="0.99">
+        <ellipse cx="88" cy="70" rx="5.5" ry="17"/><ellipse cx="88" cy="108" rx="5.5" ry="17"/><ellipse cx="88" cy="146" rx="5.5" ry="16"/><ellipse cx="88" cy="180" rx="5" ry="13"/>
+        <ellipse cx="110" cy="66" rx="5.5" ry="18"/><ellipse cx="110" cy="105" rx="5.5" ry="18"/><ellipse cx="110" cy="144" rx="5.5" ry="17"/><ellipse cx="110" cy="180" rx="5" ry="14"/>
+        <ellipse cx="132" cy="70" rx="5.5" ry="17"/><ellipse cx="132" cy="108" rx="5.5" ry="17"/><ellipse cx="132" cy="146" rx="5.5" ry="16"/><ellipse cx="132" cy="180" rx="5" ry="13"/>
       </g>
     </svg>`;
   }
-  // leafy (default) — penuh & hangat
+  // leafy (default) — rimbun 2 lapis: belakang gelap 10 daun + depan terang 9 daun
   return `<svg viewBox="0 0 220 220" width="100%" height="100%" ${common}>
-    <g fill="#7BA17D" stroke="#5C7F5E" stroke-width="1" opacity="0.98">
-      <ellipse cx="55" cy="90" rx="20" ry="34" transform="rotate(-28 55 90)"/>
-      <ellipse cx="165" cy="90" rx="20" ry="34" transform="rotate(28 165 90)"/>
-      <ellipse cx="75" cy="60" rx="18" ry="30" transform="rotate(-14 75 60)"/>
-      <ellipse cx="145" cy="60" rx="18" ry="30" transform="rotate(14 145 60)"/>
-      <ellipse cx="110" cy="48" rx="19" ry="32"/>
-      <ellipse cx="40" cy="130" rx="16" ry="28" transform="rotate(-42 40 130)"/>
-      <ellipse cx="180" cy="130" rx="16" ry="28" transform="rotate(42 180 130)"/>
+    <g fill="#5C7F5E" opacity="0.95">
+      <ellipse cx="45" cy="100" rx="21" ry="36" transform="rotate(-30 45 100)"/>
+      <ellipse cx="175" cy="100" rx="21" ry="36" transform="rotate(30 175 100)"/>
+      <ellipse cx="65" cy="62" rx="19" ry="32" transform="rotate(-16 65 62)"/>
+      <ellipse cx="155" cy="62" rx="19" ry="32" transform="rotate(16 155 62)"/>
+      <ellipse cx="110" cy="40" rx="20" ry="34"/>
+      <ellipse cx="30" cy="140" rx="17" ry="30" transform="rotate(-45 30 140)"/>
+      <ellipse cx="190" cy="140" rx="17" ry="30" transform="rotate(45 190 140)"/>
+      <ellipse cx="85" cy="140" rx="17" ry="28" transform="rotate(-12 85 140)"/>
+      <ellipse cx="135" cy="140" rx="17" ry="28" transform="rotate(12 135 140)"/>
+      <ellipse cx="110" cy="160" rx="18" ry="28"/>
     </g>
-    <g fill="none" stroke="#4E6E50" stroke-width="1.4" opacity="0.7">
-      <path d="M55 62 L55 118"/><path d="M165 62 L165 118"/><path d="M110 18 L110 78"/>
+    <g fill="#7BA17D" stroke="#5C7F5E" stroke-width="1" opacity="0.99">
+      <ellipse cx="60" cy="95" rx="18" ry="30" transform="rotate(-25 60 95)"/>
+      <ellipse cx="160" cy="95" rx="18" ry="30" transform="rotate(25 160 95)"/>
+      <ellipse cx="85" cy="65" rx="16" ry="27" transform="rotate(-12 85 65)"/>
+      <ellipse cx="135" cy="65" rx="16" ry="27" transform="rotate(12 135 65)"/>
+      <ellipse cx="110" cy="55" rx="17" ry="29"/>
+      <ellipse cx="48" cy="128" rx="14" ry="25" transform="rotate(-38 48 128)"/>
+      <ellipse cx="172" cy="128" rx="14" ry="25" transform="rotate(38 172 128)"/>
+      <ellipse cx="92" cy="122" rx="14" ry="24"/>
+      <ellipse cx="128" cy="122" rx="14" ry="24"/>
+    </g>
+    <g fill="none" stroke="#4E6E50" stroke-width="1.3" opacity="0.65">
+      <path d="M60 68 L60 122"/><path d="M160 68 L160 122"/><path d="M110 28 L110 82"/><path d="M92 100 L92 144"/><path d="M128 100 L128 144"/>
     </g>
   </svg>`;
 }
