@@ -262,10 +262,10 @@ function flowerSVG(flower, size=100){
 
 // === GREENERY REALISTIS: foto daun Unsplash (mask radial) + SVG rimbun di atasnya ===
 const GREENERY_PHOTO = {
-  leafy:'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=600&q=80&auto=format&fit=crop',
-  fern:'https://images.unsplash.com/photo-1470058869958-2a77ade41c02?w=600&q=80&auto=format&fit=crop',
-  eucalyptus:'https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=600&q=80&auto=format&fit=crop',
-  willow:'https://images.unsplash.com/photo-1463320726281-696a485928c7?w=600&q=80&auto=format&fit=crop'
+  leafy:'img/greenery/leafy.png',
+  fern:'img/greenery/fern.png',
+  eucalyptus:'img/greenery/eucalyptus.png',
+  willow:'img/greenery/willow.png'
 };
 function _greeneryBaseSVG(type){
   // panggil implementasi SVG rimbun yang lama (dipindah ke _greeneryBase di bawah via patch)
