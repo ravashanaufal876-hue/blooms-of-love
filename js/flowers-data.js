@@ -241,7 +241,9 @@ const FLOWER_IMG_MAP = {
   tulip:'tulip', ursinia:'zinnia', violet:'anemone', wisteria:'orchid',
   xeranthemum:'carnation', yarrow:'daisy', zinnia:'zinnia'
 };
-function flowerImgURL(flower){ return `${PAUWEE_BASE}/${FLOWER_IMG_MAP[flower.id] || 'rose'}.webp`; }
+function flowerImgURL(flower){ return `img/flowers/${flower.id}.webp`; }
+function flowerImgFallbackURL(fid){ return `${PAUWEE_BASE}/${FLOWER_IMG_MAP[fid] || 'rose'}.webp`; }
+window._pauweeFallback = flowerImgFallbackURL;
 // Fallback: kalau CDN offline, pakai SVG botanis lama (_flowerBase + tekstur)
 window._flowerSVGfallback = function(fid, size){
   try{
@@ -251,11 +253,11 @@ window._flowerSVGfallback = function(fid, size){
     return base.replace('</svg>', _flowerTextureCoat() + '</svg>');
   }catch(e){ return ''; }
 };
-// Wrapper: gambar realistis dulu, fallback otomatis ke SVG via onerror
+// Wrapper: lokal dulu (27 file distinct) -> pauwee CDN -> SVG botanis. Tidak pernah kotak rusak.
 function flowerSVG(flower, size=100){
   const url = flowerImgURL(flower);
   const px = Number(size)||80;
-  return `<img class="flower-img" src="${url}" width="${px}" height="${px}" alt="${flower.name}" loading="lazy" draggable="false" data-fid="${flower.id}" data-size="${px}" style="width:${px}px;height:${px}px;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,.14));pointer-events:none" onerror="try{this.outerHTML=window._flowerSVGfallback(this.dataset.fid,Number(this.dataset.size||80))}catch(e){this.remove()}"/>`;
+  return `<img class="flower-img" src="${url}" width="${px}" height="${px}" alt="${flower.name}" loading="lazy" draggable="false" data-fid="${flower.id}" data-size="${px}" style="width:${px}px;height:${px}px;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,.14));pointer-events:none" onerror="try{if(!this.dataset.fb){this.dataset.fb='1';this.src=window._pauweeFallback(this.dataset.fid)}else{this.outerHTML=window._flowerSVGfallback(this.dataset.fid,Number(this.dataset.size||80))}}catch(e){this.remove()}"/>`;
 }
 
 // === GREENERY REALISTIS: foto daun Unsplash (mask radial) + SVG rimbun di atasnya ===
