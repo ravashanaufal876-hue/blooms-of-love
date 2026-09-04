@@ -229,13 +229,53 @@ function _flowerBase(flower, size=100){
   <circle cx="47" cy="49" r="1.5" fill="white" opacity="0.6"/>
   </svg>`;
 }
-// Wrapper: base + tekstur otomatis (biar kelopak ada grain/serat, tidak flat)
+// === JALUR REALISTIS: watercolor transparan ala Digibouquet (pauwee CDN, teruji 200 OK) ===
+// 12 aset asli: orchid/tulip/dahlia/anemone/carnation/zinnia/ranunculus/sunflower/lily/daisy/peony/rose
+const PAUWEE_BASE = 'https://assets.pauwee.com/color/flowers';
+const FLOWER_IMG_MAP = {
+  amaryllis:'lily', babysbreath:'daisy', camellia:'rose', dahlia:'dahlia',
+  echinacea:'anemone', edelweiss:'daisy', freesia:'ranunculus', gardenia:'peony',
+  hydrangea:'peony', iris:'lily', jasmine:'daisy', kalmia:'carnation',
+  lily:'lily', marigold:'zinnia', nelumbo:'peony', orchid:'orchid',
+  peony:'peony', queen:'daisy', rose:'rose', sunflower:'sunflower',
+  tulip:'tulip', ursinia:'zinnia', violet:'anemone', wisteria:'orchid',
+  xeranthemum:'carnation', yarrow:'daisy', zinnia:'zinnia'
+};
+function flowerImgURL(flower){ return `${PAUWEE_BASE}/${FLOWER_IMG_MAP[flower.id] || 'rose'}.webp`; }
+// Fallback: kalau CDN offline, pakai SVG botanis lama (_flowerBase + tekstur)
+window._flowerSVGfallback = function(fid, size){
+  try{
+    const f = (window.FLOWERS||[]).find(x=>x.id===fid) || {id:fid, color:'#E88D9C', accent:'#FADBD8'};
+    const base = _flowerBase(f, size||80);
+    if(fid === 'babysbreath') return base;
+    return base.replace('</svg>', _flowerTextureCoat() + '</svg>');
+  }catch(e){ return ''; }
+};
+// Wrapper: gambar realistis dulu, fallback otomatis ke SVG via onerror
 function flowerSVG(flower, size=100){
-  const base = _flowerBase(flower, size);
-  // babysbreath berupa tangkai kecil — tekstur jangan menutupi, cukup serat ringan
-  if(flower.id === 'babysbreath') return base;
-  return base.replace('</svg>', _flowerTextureCoat() + '</svg>');
+  const url = flowerImgURL(flower);
+  const px = Number(size)||80;
+  return `<img class="flower-img" src="${url}" width="${px}" height="${px}" alt="${flower.name}" loading="lazy" draggable="false" data-fid="${flower.id}" data-size="${px}" style="width:${px}px;height:${px}px;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,.14));pointer-events:none" onerror="try{this.outerHTML=window._flowerSVGfallback(this.dataset.fid,Number(this.dataset.size||80))}catch(e){this.remove()}"/>`;
 }
+
+// === GREENERY REALISTIS: foto daun Unsplash (mask radial) + SVG rimbun di atasnya ===
+const GREENERY_PHOTO = {
+  leafy:'https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=600&q=80&auto=format&fit=crop',
+  fern:'https://images.unsplash.com/photo-1470058869958-2a77ade41c02?w=600&q=80&auto=format&fit=crop',
+  eucalyptus:'https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=600&q=80&auto=format&fit=crop',
+  willow:'https://images.unsplash.com/photo-1463320726281-696a485928c7?w=600&q=80&auto=format&fit=crop'
+};
+function _greeneryBaseSVG(type){
+  // panggil implementasi SVG rimbun yang lama (dipindah ke _greeneryBase di bawah via patch)
+  return (typeof _greenerySVGcore === 'function') ? _greenerySVGcore(type) : '';
+}
+const _greenerySVGcore = greenerySVG;
+greenerySVG = function(type){
+  const photo = GREENERY_PHOTO[type] || GREENERY_PHOTO.leafy;
+  const core = _greeneryBaseSVG(type);
+  return `<img class="g-photo" src="${photo}" alt="${type} foliage" loading="lazy" draggable="false" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;filter:saturate(1.05);-webkit-mask-image:radial-gradient(circle at 50% 55%, black 52%, transparent 72%);mask-image:radial-gradient(circle at 50% 55%, black 52%, transparent 72%)"/>`
+    + `<div class="g-svg" style="position:absolute;inset:0">${core}</div>`;
+};
 // Greenery & Card Styles — Digibouquet-like
 const GREENERIES = [
   { id:'leafy', name:'Leafy', desc:'Penuh & hangat' },

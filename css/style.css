@@ -276,6 +276,15 @@ button{font:inherit}
 }
 .greenery-layer.show{opacity:1}
 .greenery-layer svg{width:100%; height:100%; display:block; filter:drop-shadow(0 6px 12px rgba(90,125,90,.18))}
+.greenery-layer .g-svg{position:absolute; inset:0}
+.greenery-layer .g-svg svg{width:100%; height:100%}
+/* realistis: foto & watercolor */
+.flower-img{display:block; max-width:100%; user-select:none; -webkit-user-drag:none}
+.flower-visual .flower-img{margin:0 auto}
+.bloom .flower-img{pointer-events:none}
+.thumb .flower-img{width:26px !important; height:26px !important}
+.garden-thumb .flower-img{position:absolute}
+.flower-visual{background:radial-gradient(380px 200px at 50% 18%, #FFF6F0, #FFFFFF 62%)}
 .wrapper-layer{
   position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
   width:220px; height:220px; border-radius: 18px 18px 42px 42px / 18px 18px 62px 62px;
