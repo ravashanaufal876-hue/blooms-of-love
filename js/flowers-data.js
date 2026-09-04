@@ -241,7 +241,7 @@ const FLOWER_IMG_MAP = {
   tulip:'tulip', ursinia:'zinnia', violet:'anemone', wisteria:'orchid',
   xeranthemum:'carnation', yarrow:'daisy', zinnia:'zinnia'
 };
-function flowerImgURL(flower){ return `img/flowers/${flower.id}.webp`; }
+function flowerImgURL(flower){ return `img/flowers/${flower.id}.png`; }
 function flowerImgFallbackURL(fid){ return `${PAUWEE_BASE}/${FLOWER_IMG_MAP[fid] || 'rose'}.webp`; }
 window._pauweeFallback = flowerImgFallbackURL;
 // Fallback: kalau CDN offline, pakai SVG botanis lama (_flowerBase + tekstur)
