@@ -283,7 +283,6 @@ button{font:inherit}
 .flower-visual .flower-img{margin:0 auto}
 .bloom .flower-img{pointer-events:none}
 .thumb .flower-img{width:26px !important; height:26px !important}
-.garden-thumb .flower-img{position:absolute}
 .flower-visual{background:radial-gradient(380px 200px at 50% 18%, #FFF6F0, #FFFFFF 62%)}
 .wrapper-layer{
   position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
