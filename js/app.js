@@ -155,10 +155,18 @@
     try{ return decodeURIComponent(escape(atob(str))); } catch(e){ return null; }
   }
   function encodeStateToURL(){
+    // slim: uid tidak ikut (diregenerate saat load), angka dibulatkan biar payload pendek
+    const slimBouquet = state.bouquet.map(b=>[
+      b.flowerId,
+      Math.round(Number(b.x)*10)/10,
+      Math.round(Number(b.y)*10)/10,
+      Math.round(Number(b.scale)*100)/100,
+      Math.round(Number(b.rotation))
+    ]);
     const payload = compressPayload({
-      b:state.bouquet, w:state.wrapper, r:state.ribbon, g:state.greenery, cs:state.cardStyle, m:state.mode, l:state.letter
+      b:slimBouquet, w:state.wrapper, r:state.ribbon, g:state.greenery, cs:state.cardStyle, m:state.mode, l:state.letter
     });
-    const url = new URL(location.href);
+    const url = new URL(location.href.split('?')[0].split('#')[0]);
     url.searchParams.set('gift', payload);
     // clean garden etc
     return url.toString();
@@ -171,7 +179,14 @@
       const raw = decompressPayload(g);
       if(!raw) return false;
       const data = JSON.parse(raw);
-      if(Array.isArray(data.b)) state.bouquet = data.b;
+      if(Array.isArray(data.b)){
+        // dukung 2 format: lama (array of object) & baru slim (array of array)
+        if(data.b.length && Array.isArray(data.b[0])){
+          state.bouquet = data.b.map((a,i)=>({ uid:String(i+1), flowerId:a[0], x:Number(a[1]), y:Number(a[2]), scale:Number(a[3]), rotation:Number(a[4]) }));
+        } else {
+          state.bouquet = data.b;
+        }
+      }
       if(data.w) state.wrapper = data.w;
       if(data.r) state.ribbon = data.r;
       if(data.g) state.greenery = data.g;
@@ -700,7 +715,7 @@
       saveToLS(); renderAll(); goStep(2); showToast('Bouquet dari Garden dimuat ✨'); playClickSound();
     });
 
-    // — short link via is.gd (free, no key, CORS ok)
+    // — short link: coba 3 provider gratis biar kebal CORS/adblock
     async function shortenViaIsGd(longUrl){
       try{
         const api = 'https://is.gd/create.php?format=json&url=' + encodeURIComponent(longUrl);
@@ -710,6 +725,33 @@
         return j.shorturl || j.shortUrl || null;
       } catch(e){ return null; }
     }
+    async function shortenViaTinyUrl(longUrl){
+      try{
+        const api = 'https://tinyurl.com/api-create.php?url=' + encodeURIComponent(longUrl);
+        const res = await fetch(api);
+        if(!res.ok) return null;
+        const t = (await res.text()).trim();
+        return (t.startsWith('http')) ? t : null;
+      } catch(e){ return null; }
+    }
+    async function shortenViaCleanUri(longUrl){
+      try{
+        const res = await fetch('https://cleanuri.com/api/v1/shorten', {
+          method:'POST',
+          headers:{'Content-Type':'application/x-www-form-urlencoded'},
+          body:'url=' + encodeURIComponent(longUrl)
+        });
+        if(!res.ok) return null;
+        const j = await res.json();
+        return j.result_url || null;
+      } catch(e){ return null; }
+    }
+    async function shortenUrl(longUrl){
+      return (await shortenViaIsGd(longUrl))
+        || (await shortenViaTinyUrl(longUrl))
+        || (await shortenViaCleanUri(longUrl))
+        || null;
+    }
     const copyLink = async (link, opts={})=>{
       const l = link || encodeStateToURL();
       const wantShort = opts.short === true;
@@ -717,7 +759,7 @@
       let shortUrl = null;
       if(wantShort){
         showToast('Memperpendek link... ⏳');
-        shortUrl = await shortenViaIsGd(l);
+        shortUrl = await shortenUrl(l);
         if(shortUrl) toCopy = shortUrl;
       }
       try{
@@ -777,10 +819,20 @@
 
     $('#btnDownloadCard').addEventListener('click', ()=>{ window.print(); });
     $('#btnPetalsPreview').addEventListener('click', ()=> fallingPetals(24));
-    $('#btnWhatsApp').addEventListener('click', ()=>{
-      const link = encodeStateToURL();
-      const text = `Hai sayang 💌 Aku buatkan buket digital untukmu: ${link}`;
+    $('#btnWhatsApp').addEventListener('click', async ()=>{
+      const longUrl = encodeStateToURL();
+      let url = longUrl;
+      showToast('Menyiapkan link WhatsApp... ⏳');
+      // coba pendekin dulu biar tidak kepanjangan di WA (seperti di screenshot)
+      const short = await shortenUrl(longUrl);
+      if(short) url = short;
+      else {
+        // fallback: kalau is.gd diblokir CORS, buka tab is.gd manual biar user bisa copy pendeknya
+        console.warn('is.gd gagal, pakai long URL untuk WA');
+      }
+      const text = `Hai sayang 💌 Aku buatkan buket digital untukmu: ${url}`;
       window.open('https://wa.me/?text='+encodeURIComponent(text), '_blank');
+      if(short) showToast('WhatsApp dibuka dengan link pendek ✨');
     });
   }
 
