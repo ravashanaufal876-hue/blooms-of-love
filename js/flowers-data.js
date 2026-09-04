@@ -47,7 +47,20 @@ function _veins(n, cx, cy, len, color){
   }
   return s;
 }
-function flowerSVG(flower, size=100){
+// Tekstur kelopak: grain velvet + serat halus (di-inject otomatis via wrapper di bawah)
+function _flowerTextureCoat(){
+  const tid = 'tex' + (++_svgCounter);
+  const cid = 'clip' + tid;
+  return `<defs>`
+    + `<filter id="${tid}" x="-20%" y="-20%" width="140%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="11" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.55 0"/></filter>`
+    + `<clipPath id="${cid}"><circle cx="50" cy="52" r="33"/></clipPath>`
+    + `</defs><g clip-path="url(#${cid})">`
+    + `<rect x="14" y="14" width="72" height="72" filter="url(#${tid})" opacity="0.26"/>`
+    + `<g opacity="0.13" stroke="white" stroke-width="0.8" fill="none" stroke-linecap="round"><path d="M28 58 Q50 53 72 58"/><path d="M30 67 Q50 62 70 67"/><path d="M33 44 Q50 39 67 44"/><path d="M36 76 Q50 72 64 76"/></g>`
+    + `<g opacity="0.09" stroke="black" stroke-width="0.7" fill="none" stroke-linecap="round"><path d="M33 53 Q50 49 67 53"/><path d="M35 72 Q50 68 65 72"/></g>`
+    + `</g>`;
+}
+function _flowerBase(flower, size=100){
   const c = flower.color;
   const ac = flower.accent;
   const uid = ++_svgCounter;
@@ -215,6 +228,13 @@ function flowerSVG(flower, size=100){
   <circle cx="50" cy="52" r="8" fill="url(#${gid2})" stroke="#8A6D1B" stroke-width="0.8"/>
   <circle cx="47" cy="49" r="1.5" fill="white" opacity="0.6"/>
   </svg>`;
+}
+// Wrapper: base + tekstur otomatis (biar kelopak ada grain/serat, tidak flat)
+function flowerSVG(flower, size=100){
+  const base = _flowerBase(flower, size);
+  // babysbreath berupa tangkai kecil — tekstur jangan menutupi, cukup serat ringan
+  if(flower.id === 'babysbreath') return base;
+  return base.replace('</svg>', _flowerTextureCoat() + '</svg>');
 }
 // Greenery & Card Styles — Digibouquet-like
 const GREENERIES = [
