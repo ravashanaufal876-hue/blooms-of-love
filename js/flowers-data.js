@@ -272,11 +272,12 @@ function _greeneryBaseSVG(type){
   return (typeof _greenerySVGcore === 'function') ? _greenerySVGcore(type) : '';
 }
 const _greenerySVGcore = greenerySVG;
+// PNG saja, tanpa SVG tambahan — 3 lapis beda rotasi biar rimbun & lebih gede dari wrapper
 greenerySVG = function(type){
   const photo = GREENERY_PHOTO[type] || GREENERY_PHOTO.leafy;
-  const core = _greeneryBaseSVG(type);
-  return `<img class="g-photo" src="${photo}" alt="${type} foliage" loading="lazy" draggable="false" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5;filter:saturate(1.05);-webkit-mask-image:radial-gradient(circle at 50% 55%, black 52%, transparent 72%);mask-image:radial-gradient(circle at 50% 55%, black 52%, transparent 72%)"/>`
-    + `<div class="g-svg" style="position:absolute;inset:0">${core}</div>`;
+  const mask = '-webkit-mask-image:radial-gradient(circle at 50% 55%, black 60%, transparent 78%);mask-image:radial-gradient(circle at 50% 55%, black 60%, transparent 78%)';
+  const img = (tr, op) => `<img class="g-photo" src="${photo}" alt="${type} foliage" loading="lazy" draggable="false" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:${op};transform:${tr};filter:saturate(1.08);${mask}"/>`;
+  return img('rotate(-16deg) scale(1.02)', '.95') + img('rotate(13deg) scale(1.14)', '.6') + img('rotate(0deg) scale(1.26)', '.38');
 };
 // Greenery & Card Styles — Digibouquet-like
 const GREENERIES = [

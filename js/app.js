@@ -383,7 +383,7 @@
     }
     const _gSVG = (window.greenerySVG) ? window.greenerySVG(state.greenery) : '';
     el.previewBouquet.innerHTML = `
-      <div class="greenery-layer show ${state.greenery}" style="left:50%; top:42%; transform:translate(-50%,-50%); width:300px; height:280px; opacity:1">${_gSVG}</div>
+      <div class="greenery-layer show ${state.greenery}" style="left:50%; top:38%; transform:translate(-50%,-50%); width:370px; height:350px; opacity:1">${_gSVG}</div>
       <div class="wrapper-layer ${state.wrapper}" style="width:230px;height:230px; bottom:22px"></div>
       <div class="ribbon ${state.ribbon}" style="bottom:62px; width:88px">WITH LOVE</div>
       <div class="bouquet-flowers" style="position:absolute; inset:0">

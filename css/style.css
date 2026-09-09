@@ -268,8 +268,8 @@ button{font:inherit}
 }
 .bouquet-stage.mono{filter:grayscale(1)}
 .greenery-layer{
-  position:absolute; left:50%; top:44%; transform:translate(-50%,-50%);
-  width:min(300px, 82%); height:min(300px, 68%);
+  position:absolute; left:50%; top:38%; transform:translate(-50%,-50%);
+  width:min(390px, 98%); height:min(390px, 84%);
   display:grid; place-items:center;
   opacity:0; pointer-events:none; transition:.25s opacity;
   z-index:3;
