@@ -458,9 +458,11 @@ button{font:inherit}
 .letter-paper.card-midnight .letter-to, .letter-paper.card-midnight .letter-from{color:#B9B9B9}
 .letter-paper.card-midnight .letter-to strong, .letter-paper.card-midnight .letter-from strong{color:#FFFFFF}
 .letter-paper.card-midnight .letter-body{background:#1A1A1A; border-color:#2A2A2A; color:#F5F5F5}
-.letter-paper.card-choco{background:linear-gradient(160deg, #FFF8EC 0%, #F3E2C7 45%, #E6CDA6 100%); border-color:#C9A97E}
-.letter-paper.card-choco::before{background:linear-gradient(90deg, #3E2A1E, #8B5E3C)}
-.letter-paper.card-choco .letter-body{background:#FFFEF7; border-color:#C9A97E}
+.letter-paper.card-choco{background:linear-gradient(160deg, #7A5A3E 0%, #5A3E26 48%, #3A281B 100%); border-color:#2E2015; color:#F5EAD8}
+.letter-paper.card-choco::before{background:linear-gradient(90deg, #2A1C12, #8B5E3C)}
+.letter-paper.card-choco .letter-to, .letter-paper.card-choco .letter-from{color:#D9C4A8}
+.letter-paper.card-choco .letter-to strong, .letter-paper.card-choco .letter-from strong{color:#FFF6E8}
+.letter-paper.card-choco .letter-body{background:#2E2015; border-color:#6B4E33; color:#F5EAD8}
 .letter-to, .letter-from{font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:700}
 .letter-to strong, .letter-from strong{color:var(--ink); text-transform:none; letter-spacing:0; font-size:13px}
 .letter-body{
