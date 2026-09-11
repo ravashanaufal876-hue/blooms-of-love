@@ -53,7 +53,7 @@
       font: l.font || 'dancing',
       textX: Number(l.textX) || 0,
       textY: Number(l.textY) || 0,
-      imgs: Array.isArray(l.imgs) ? l.imgs.filter(s=> s && s.src).map(s=>({ id:String(s.id||('s'+(stickerUid++))), src:s.src, x:Number(s.x)||30, y:Number(s.y)||30, w:Math.min(80, Math.max(12, Number(s.w)||34)) })) : []
+      imgs: Array.isArray(l.imgs) ? l.imgs.filter(s=> s && s.src).map(s=>({ id:String(s.id||('s'+(stickerUid++))), src:s.src, remote:(s.remote && String(s.remote).startsWith('https://')) ? s.remote : null, x:Number(s.x)||30, y:Number(s.y)||30, w:Math.min(80, Math.max(12, Number(s.w)||34)) })) : []
     };
   }
   function escHtml(s){
@@ -255,8 +255,53 @@
     }
     try{ return decodeURIComponent(escape(atob(str))); } catch(e){ return null; }
   }
-  function encodeStateToURL(opts, loud){
-    // slim: uid tidak ikut (diregenerate saat load), angka dibulatkan biar payload pendek
+  // upload gambar surat ke hosting gratis → link hadiah tetap pendek
+  async function uploadLetterImage(dataUrl, name){
+    try{
+      const blob = await (await fetch(dataUrl)).blob();
+      const fd = new FormData();
+      fd.append('reqtype', 'fileupload');
+      fd.append('fileToUpload', new File([blob], name || 'surat.jpg', { type:'image/jpeg' }));
+      const res = await fetch('https://catbox.moe/user/api.php', { method:'POST', body:fd });
+      if(!res.ok) return null;
+      const t = (await res.text()).trim();
+      return t.startsWith('https://') ? t : null;
+    } catch(e){ return null; }
+  }
+  const _rx = (v)=> Math.round(Number(v)*10)/10;
+  async function buildShareLetter(){
+    // samakan dengan shareLetter(), tapi dataURL di-upload dulu bila bisa
+    const L = state.letter;
+    const out = [];
+    const pending = (L.imgs || []).filter(s=> /^data:/.test(s.src || '') && !(s.remote && s.remote.startsWith('https://')));
+    if(pending.length) showToast('Mengunggah gambar… ⏳');
+    for(const s of (L.imgs || [])){
+      if(s.remote && s.remote.startsWith('https://')){
+        out.push({ id:s.id, src:s.remote, x:_rx(s.x), y:_rx(s.y), w:Number(s.w)||34 });
+        continue;
+      }
+      if(/^data:/.test(s.src || '')){
+        const url = await uploadLetterImage(s.src, 'surat-' + String(s.id || 'x') + '.jpg');
+        if(url){ s.remote = url; out.push({ id:s.id, src:url, x:_rx(s.x), y:_rx(s.y), w:Number(s.w)||34 }); continue; }
+      }
+      out.push({ id:s.id, src:s.src, x:_rx(s.x), y:_rx(s.y), w:Number(s.w)||34 });
+    }
+    if(pending.length){
+      const ok = out.filter(o=> !/^data:/.test(o.src)).length;
+      if(ok < (L.imgs || []).length) showToast('Upload gambar gagal — link panjang dipakai ⚠️');
+      saveToLS(); // simpan cache URL hasil upload
+    }
+    // budget terakhir untuk sisa dataURL (kalau upload gagal)
+    let bytes = 0;
+    const kept = [];
+    for(const o of out){
+      if(/^data:/.test(o.src)){ bytes += o.src.length; if(bytes > 150000) break; }
+      kept.push(o);
+    }
+    if(kept.length < out.length) showToast('Sebagian gambar tidak ikut link (kebesaran) ⚠️');
+    return { recipient:L.recipient, message:L.message, sender:L.sender, font:L.font, textX:Math.round(Number(L.textX)||0), textY:Math.round(Number(L.textY)||0), imgs:kept };
+  }
+  function encodeWithLetter(letterObj){
     const slimBouquet = state.bouquet.map(b=>[
       b.flowerId,
       Math.round(Number(b.x)*10)/10,
@@ -265,12 +310,14 @@
       Math.round(Number(b.rotation))
     ]);
     const payload = compressPayload({
-      b:slimBouquet, w:state.wrapper, r:state.ribbon, rt:state.ribbonText, g:state.greenery, cs:state.cardStyle, m:state.mode, mu:state.music, l:shareLetter(loud)
+      b:slimBouquet, w:state.wrapper, r:state.ribbon, rt:state.ribbonText, g:state.greenery, cs:state.cardStyle, m:state.mode, mu:state.music, l:letterObj
     });
     const url = new URL(location.href.split('?')[0].split('#')[0]);
     url.searchParams.set('gift', payload);
-    // clean garden etc
     return url.toString();
+  }
+  function encodeStateToURL(opts, loud){
+    return encodeWithLetter(shareLetter(loud));
   }
   // surat untuk share-link: gambar dibatasi totalnya biar link tidak kepanjangan
   function shareLetter(loud){
@@ -1298,7 +1345,7 @@
         || null;
     }
     const copyLink = async (link, opts={})=>{
-      const l = link || encodeStateToURL({}, true);
+      const l = link || await buildShareLink();
       const wantShort = opts.short === true;
       let toCopy = l;
       let shortUrl = null;
@@ -1327,7 +1374,7 @@
     };
     $('#btnShare').addEventListener('click', ()=> copyLink(null, {short:true}));
     $('#btnCopyPreview').addEventListener('click', ()=> copyLink(null, {short:true}));
-    $('#btnCopyLink2').addEventListener('click', ()=> copyLink(el.shareLinkInput.value, {short:false}));
+    $('#btnCopyLink2').addEventListener('click', ()=> copyLink(null, {short:false}));
     // tombol extra “Perpendek” kalau user mau manual
     const btnShort = document.createElement('button');
     btnShort.type='button'; btnShort.className='btn btn-ghost btn-small'; btnShort.id='btnShortLink';
@@ -1336,9 +1383,7 @@
     if(el.shareLinkInput && el.shareLinkInput.parentElement){
       el.shareLinkInput.parentElement.appendChild(btnShort);
       btnShort.addEventListener('click', async ()=>{
-        const longUrl = encodeStateToURL();
-        el.shareLinkInput.value = longUrl;
-        await copyLink(longUrl, {short:true});
+        await copyLink(null, {short:true});
       });
     }
 
@@ -1375,7 +1420,7 @@
     $('#btnDownloadCard').addEventListener('click', ()=>{ window.print(); });
     $('#btnPetalsPreview').addEventListener('click', ()=> fallingPetals(24));
     $('#btnWhatsApp').addEventListener('click', async ()=>{
-      const longUrl = encodeStateToURL({}, true);
+      const longUrl = await buildShareLink();
       let url = longUrl;
       showToast('Menyiapkan link WhatsApp... ⏳');
       // coba pendekin dulu biar tidak kepanjangan di WA (seperti di screenshot)
