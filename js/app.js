@@ -21,15 +21,14 @@
     greenery:'leafy',
     cardStyle:'ivory',
     mode:'color',
-    letter:{ recipient:'For My Beloved', message:'', sender:'Dari Aku yang Selalu Mencintaimu', font:'dancing' },
+    letter:{ recipient:'For My Beloved', message:'', sender:'Dari Aku yang Selalu Mencintaimu', font:'dancing', textX:0, textY:0, imgs:[] },
     filterLetter:'', search:'',
     envelopeOpen:false,
     step:1,
     garden: []
   };
   // backward-compat: bunga K lama (kalmia) dipetakan ke krokus agar save/link lama tetap kebuka
-  function flowerById(id){
-    if(!id) return null;
+  function flowerById(id){    if(!id) return null;
     let f = (window.FLOWERS||[]).find(x=>x.id===id);
     if(f) return f;
     if(id==='kalmia') return (window.FLOWERS||[]).find(x=>x.id==='krokus') || null;
@@ -42,6 +41,22 @@
       if(nb.flowerId==='kalmia') nb.flowerId='krokus';
       return nb;
     });
+  }
+  let stickerUid = 1;
+  function normalizeLetter(l){
+    l = l || {};
+    return {
+      recipient: l.recipient || '',
+      message: l.message || '',
+      sender: l.sender || '',
+      font: l.font || 'dancing',
+      textX: Number(l.textX) || 0,
+      textY: Number(l.textY) || 0,
+      imgs: Array.isArray(l.imgs) ? l.imgs.filter(s=> s && s.src).map(s=>({ id:String(s.id||('s'+(stickerUid++))), src:s.src, x:Number(s.x)||30, y:Number(s.y)||30, w:Math.min(80, Math.max(12, Number(s.w)||34)) })) : []
+    };
+  }
+  function escHtml(s){
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
   function ribbonHTML(cls, text, bandStyle){
     const t = (text || state.ribbonText || 'WITH LOVE').toUpperCase().slice(0,24) || 'WITH LOVE';
@@ -105,6 +120,11 @@
     letterBody: $('#letterBody'),
     letterFrom: $('#letterFrom'),
     letterPaper: $('#letterPaper'),
+    stickerLayer: $('#stickerLayer'),
+    previewStickerLayer: $('#previewStickerLayer'),
+    letterImgInput: $('#letterImgInput'),
+    letterExpand: $('#letterExpand'),
+    expandPaper: $('#expandPaper'),
     envelope: $('#envelope'),
     sealHint: $('#sealHint'),
     previewOverlay: $('#previewOverlay'),
@@ -180,10 +200,12 @@
       if(p.greenery) state.greenery = p.greenery;
       if(p.cardStyle) state.cardStyle = p.cardStyle;
       if(p.mode) state.mode = p.mode;
-      if(p.letter) Object.assign(state.letter, p.letter);
+      if(p.letter) state.letter = normalizeLetter(Object.assign({}, state.letter, p.letter));
       if(p.step) state.step = p.step;
       const maxUid = Math.max(0, ...state.bouquet.map(b=> Number(b.uid)||0));
       uidCounter = maxUid + 1;
+      const maxSid = Math.max(0, ...state.letter.imgs.map(s=> Number(String(s.id).replace(/^s/,''))||0));
+      stickerUid = maxSid + 1;
     } catch(e){}
   }
   function saveGarden(){
@@ -217,7 +239,7 @@
     }
     try{ return decodeURIComponent(escape(atob(str))); } catch(e){ return null; }
   }
-  function encodeStateToURL(){
+  function encodeStateToURL(opts, loud){
     // slim: uid tidak ikut (diregenerate saat load), angka dibulatkan biar payload pendek
     const slimBouquet = state.bouquet.map(b=>[
       b.flowerId,
@@ -227,12 +249,25 @@
       Math.round(Number(b.rotation))
     ]);
     const payload = compressPayload({
-      b:slimBouquet, w:state.wrapper, r:state.ribbon, rt:state.ribbonText, g:state.greenery, cs:state.cardStyle, m:state.mode, l:state.letter
+      b:slimBouquet, w:state.wrapper, r:state.ribbon, rt:state.ribbonText, g:state.greenery, cs:state.cardStyle, m:state.mode, l:shareLetter(loud)
     });
     const url = new URL(location.href.split('?')[0].split('#')[0]);
     url.searchParams.set('gift', payload);
     // clean garden etc
     return url.toString();
+  }
+  // surat untuk share-link: gambar dibatasi totalnya biar link tidak kepanjangan
+  function shareLetter(loud){
+    const L = state.letter;
+    const kept = [];
+    let bytes = 0;
+    for(const s of (L.imgs || [])){
+      bytes += (s.src || '').length;
+      if(bytes <= 150000) kept.push({ id:s.id, src:s.src, x:Math.round(Number(s.x)*10)/10, y:Math.round(Number(s.y)*10)/10, w:Number(s.w)||34 });
+      else break;
+    }
+    if(loud && kept.length < (L.imgs || []).length) showToast('Sebagian gambar tidak ikut link (kebesaran) ⚠️');
+    return { recipient:L.recipient, message:L.message, sender:L.sender, font:L.font, textX:Math.round(Number(L.textX)||0), textY:Math.round(Number(L.textY)||0), imgs:kept };
   }
   function loadFromURL(){
     const sp = new URLSearchParams(location.search);
@@ -263,8 +298,9 @@
       if(data.g) state.greenery = data.g;
       if(data.cs) state.cardStyle = data.cs;
       if(data.m) state.mode = data.m;
-      if(data.l) Object.assign(state.letter, data.l);
+      if(data.l) state.letter = normalizeLetter(Object.assign({}, state.letter, data.l));
       uidCounter = Math.max(1, ...state.bouquet.map(b=> Number(b.uid)||0)) + 1;
+      stickerUid = Math.max(1, ...state.letter.imgs.map(s=> Number(String(s.id).replace(/^s/,''))||0)) + 1;
       state.step = 4;
       return true;
     } catch(e){ return false; }
@@ -361,10 +397,10 @@
   }
   function syncCardStyle(){
     $$('#cardStyles .card-style').forEach(x=> x.classList.toggle('active', x.dataset.card===state.cardStyle));
-    // letter paper class
+    // letter paper class (pertahankan clickable/static)
     const cls = MAP_CARD[state.cardStyle] || 'card-ivory';
-    el.letterPaper.className = 'letter-paper ' + cls;
-    el.previewLetterPaper.className = 'letter-paper ' + cls;
+    el.letterPaper.className = 'letter-paper clickable ' + cls;
+    el.previewLetterPaper.className = 'letter-paper static clickable ' + cls;
   }
 
   function renderBouquetStage(){
@@ -416,15 +452,29 @@
     }).join('');
   }
 
+  function renderStickers(){
+    const paint = (interactive)=> (state.letter.imgs||[]).map(s=>`
+      <div class="sticker" data-sticker="${escHtml(s.id)}" style="left:${Number(s.x)||0}%; top:${Number(s.y)||0}%; width:${Number(s.w)||34}%">
+        <img src="${s.src}" alt="gambar surat" draggable="false"/>
+        ${interactive ? `<button class="st-remove" data-stremove="${escHtml(s.id)}" type="button" title="Hapus gambar">×</button>` : ''}
+      </div>`).join('');
+    if(el.stickerLayer) el.stickerLayer.innerHTML = paint(true);
+    if(el.previewStickerLayer) el.previewStickerLayer.innerHTML = paint(false);
+  }
+
   function renderLetter(){
     el.letterTo.textContent = state.letter.recipient || '—';
     el.letterFrom.textContent = state.letter.sender || '—';
-    el.letterBody.textContent = state.letter.message || 'Tulis pesanmu di editor — akan muncul di sini ✨';
-    el.letterBody.className = 'letter-body ' + (MAP_FONT[state.letter.font] || 'font-dancing');
+    const _msg = state.letter.message || 'Tulis pesanmu di editor — akan muncul di sini ✨';
+    const _fcls = MAP_FONT[state.letter.font] || 'font-dancing';
+    el.letterBody.textContent = _msg;
+    el.letterBody.className = 'letter-body draggable ' + _fcls;
+    el.letterBody.style.transform = `translate(${Number(state.letter.textX)||0}px, ${Number(state.letter.textY)||0}px)`;
     $('#previewLetterTo').textContent = el.letterTo.textContent;
     $('#previewLetterFrom').textContent = el.letterFrom.textContent;
-    $('#previewLetterBody').textContent = el.letterBody.textContent;
-    $('#previewLetterBody').className = 'letter-body ' + (MAP_FONT[state.letter.font] || 'font-dancing');
+    $('#previewLetterBody').textContent = _msg;
+    $('#previewLetterBody').className = 'letter-body ' + _fcls;
+    renderStickers();
     $('#previewTo').textContent = (state.letter.recipient||'Beloved').replace(/^For\s+/i,'');
     el.heroLetterPreview.textContent = (state.letter.message||'').slice(0,120) + ((state.letter.message||'').length>120?'…':'') || 'Untukmu — mekar pelan, indah, tak pernah layu. 🌸';
   }
@@ -769,6 +819,160 @@
       const s = SAMPLES[Math.floor(Math.random()*SAMPLES.length)];
       el.messageInput.value = s; onLetter(); showToast('Contoh pesan dimasukkan 💡'); el.messageInput.focus();
     });
+    $('#btnResetTeksPos').addEventListener('click', ()=>{
+      state.letter.textX = 0; state.letter.textY = 0;
+      saveToLS(); renderLetter(); updateShareLink(); showToast('Posisi teks direset ↺'); playClickSound();
+    });
+
+    // --- gambar di surat: upload + downscale ---
+    function addLetterImages(files){
+      const slots = 3 - (state.letter.imgs||[]).length;
+      if(slots <= 0) return showToast('Maksimal 3 gambar di surat 🖼️');
+      [...(files||[])].slice(0, slots).forEach(f=>{
+        if(!f || !f.type || !f.type.startsWith('image/')) return;
+        const rd = new FileReader();
+        rd.onload = ()=>{
+          const img = new Image();
+          img.onload = ()=>{
+            try{
+              const MAX = 500;
+              const sc = Math.min(1, MAX / Math.max(img.width || 1, img.height || 1));
+              const w = Math.max(1, Math.round(img.width * sc)), h = Math.max(1, Math.round(img.height * sc));
+              const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+              cv.getContext('2d').drawImage(img, 0, 0, w, h);
+              const src = cv.toDataURL('image/jpeg', 0.72);
+              if(src.length > 220000) return showToast('Gambar terlalu besar, coba yang lain ⚠️');
+              state.letter.imgs.push({ id:'s' + (stickerUid++), src, x:28 + Math.random()*22, y:28 + Math.random()*22, w:34 });
+              saveToLS(); renderLetter(); updateShareLink(); showToast('Gambar ditambahkan 🖼️'); playClickSound();
+            } catch(e){ showToast('Gagal membaca gambar ⚠️'); }
+          };
+          img.onerror = ()=> showToast('Gagal membaca gambar ⚠️');
+          img.src = rd.result;
+        };
+        rd.readAsDataURL(f);
+      });
+    }
+    if(el.letterImgInput){
+      el.letterImgInput.addEventListener('change', (e)=>{
+        addLetterImages(e.target.files);
+        e.target.value = '';
+      });
+    }
+    $('#btnClearStickers').addEventListener('click', ()=>{
+      if(!state.letter.imgs.length) return showToast('Belum ada gambar');
+      state.letter.imgs = [];
+      saveToLS(); renderLetter(); updateShareLink(); showToast('Gambar dihapus 🗑️'); playClickSound();
+    });
+    el.stickerLayer.addEventListener('click', (e)=>{
+      const rem = e.target.closest('[data-stremove]');
+      if(!rem) return;
+      e.stopPropagation();
+      state.letter.imgs = state.letter.imgs.filter(s=> String(s.id) !== String(rem.dataset.stremove));
+      saveToLS(); renderLetter(); updateShareLink(); showToast('Gambar dihapus'); playClickSound();
+    });
+
+    // --- drag teks & stiker di kertas (pointer mouse + sentuh) ---
+    function runLetterDrag(node, e, onMove, onDone){
+      if(e.button != null && e.button !== 0) return;
+      let moved = false;
+      const pt0 = e.touches ? e.touches[0] : e;
+      const sx = pt0.clientX, sy = pt0.clientY;
+      node.classList.add('dragging');
+      const move = (ev)=>{
+        const q = ev.touches ? ev.touches[0] : ev;
+        if(Math.abs(q.clientX - sx) + Math.abs(q.clientY - sy) > 8) moved = true;
+        if(moved){ onMove(q.clientX - sx, q.clientY - sy, q); if(ev.cancelable) ev.preventDefault(); }
+      };
+      const up = ()=>{
+        node.classList.remove('dragging');
+        window.removeEventListener('mousemove', move);
+        window.removeEventListener('mouseup', up);
+        window.removeEventListener('touchmove', move);
+        window.removeEventListener('touchend', up);
+        if(onDone) onDone(moved);
+      };
+      window.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', up);
+      window.addEventListener('touchmove', move, {passive:false});
+      window.addEventListener('touchend', up);
+    }
+    function bindLetterDrag(node, onMove, onDone){
+      node.addEventListener('mousedown', (e)=>{
+        if(e.target.closest && e.target.closest('button')) return;
+        runLetterDrag(node, e, onMove, onDone);
+      });
+      node.addEventListener('touchstart', (e)=>{
+        if(e.target.closest && e.target.closest('button')) return;
+        runLetterDrag(node, e, onMove, onDone);
+        if(e.cancelable) e.preventDefault();
+      }, {passive:false});
+    }
+    // drag teks surat (offset px, tersimpan; tap = perbesar via handler kertas)
+    bindLetterDrag(el.letterBody,
+      (dx, dy)=>{ el.letterBody.style.transform = `translate(${(state.letter.textX||0)+dx}px, ${(state.letter.textY||0)+dy}px)`; },
+      (moved)=>{
+        if(!moved) return;
+        const m = el.letterBody.style.transform.match(/translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/);
+        if(m){ state.letter.textX = Math.max(-160, Math.min(160, Number(m[1]))); state.letter.textY = Math.max(-160, Math.min(160, Number(m[2]))); }
+        saveToLS(); renderLetter(); updateShareLink();
+      });
+    // drag stiker (delegasi — stiker di-render ulang tiap renderStickers)
+    const stickerGesture = (e)=>{
+      const node = e.target.closest ? e.target.closest('.sticker') : null;
+      if(!node || (e.target.closest && e.target.closest('[data-stremove]'))) return;
+      const s = state.letter.imgs.find(x=> String(x.id) === String(node.dataset.sticker));
+      if(!s || !el.letterPaper) return;
+      const paper = el.letterPaper.getBoundingClientRect();
+      const ox = Number(s.x)||0, oy = Number(s.y)||0;
+      runLetterDrag(node, e,
+        (dx, dy)=>{
+          s.x = Math.min(88, Math.max(-8, ox + dx / paper.width * 100));
+          s.y = Math.min(92, Math.max(-8, oy + dy / paper.height * 100));
+          node.style.left = s.x + '%'; node.style.top = s.y + '%';
+        },
+        (moved)=>{ if(!moved) return; saveToLS(); renderLetter(); updateShareLink(); });
+      if(e.cancelable && e.type === 'touchstart') e.preventDefault();
+    };
+    el.stickerLayer.addEventListener('mousedown', stickerGesture);
+    el.stickerLayer.addEventListener('touchstart', stickerGesture, {passive:false});
+
+    // --- klik kertas untuk memperbesar ---
+    function openExpand(){
+      const L = state.letter;
+      const cls = MAP_CARD[state.cardStyle] || 'card-ivory';
+      const fcls = MAP_FONT[L.font] || 'font-dancing';
+      el.expandPaper.className = 'letter-paper static ' + cls;
+      el.expandPaper.innerHTML = `
+        <div class="letter-to">Untuk: <strong>${escHtml(L.recipient || '—')}</strong></div>
+        <div class="letter-body ${fcls}" style="transform:translate(${Number(L.textX)||0}px, ${Number(L.textY)||0}px)">${escHtml(L.message || '—')}</div>
+        <div class="letter-from">Dari: <strong>${escHtml(L.sender || '—')}</strong></div>
+        <div class="stickers">${(L.imgs||[]).map(x=>`<div class="sticker" style="left:${Number(x.x)||0}%; top:${Number(x.y)||0}%; width:${Number(x.w)||34}%"><img src="${x.src}" alt="gambar surat"/></div>`).join('')}</div>`;
+      el.letterExpand.classList.add('open');
+      el.letterExpand.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      playClickSound();
+    }
+    function closeExpand(){
+      el.letterExpand.classList.remove('open');
+      el.letterExpand.setAttribute('aria-hidden', 'true');
+      // jangan rebut scroll kalau preview masih kebuka
+      if(!el.previewOverlay.classList.contains('open')) document.body.style.overflow = '';
+      playClickSound();
+    }
+    window._openExpand = openExpand;
+    // tap (tanpa geser) di kertas preview → perbesar
+    [['#previewLetterPaper'], ['#letterPaper']].forEach(([sel])=>{
+      const paper = $(sel);
+      if(!paper) return;
+      let dx=0, dy=0;
+      paper.addEventListener('mousedown', (e)=>{ dx = e.clientX; dy = e.clientY; });
+      paper.addEventListener('mouseup', (e)=>{
+        if(e.target.closest && e.target.closest('button, input, label, textarea')) return;
+        if(Math.abs(e.clientX - dx) + Math.abs(e.clientY - dy) < 8) openExpand();
+      });
+    });
+    $('#btnCloseExpand').addEventListener('click', closeExpand);
+    el.letterExpand.addEventListener('click', (e)=>{ if(e.target === el.letterExpand) closeExpand(); });
 
     // envelope
     const toggleEnvelope = ()=>{
@@ -806,7 +1010,7 @@
       state.greenery = g.greenery||'leafy';
       state.cardStyle = g.cardStyle||'ivory';
       state.mode = g.mode||'color';
-      state.letter = {...g.letter};
+      state.letter = normalizeLetter(Object.assign({textX:0, textY:0, imgs:[]}, g.letter));
       // refresh inputs
       el.recipientInput.value = state.letter.recipient||'';
       el.messageInput.value = state.letter.message||'';
@@ -855,7 +1059,7 @@
         || null;
     }
     const copyLink = async (link, opts={})=>{
-      const l = link || encodeStateToURL();
+      const l = link || encodeStateToURL({}, true);
       const wantShort = opts.short === true;
       let toCopy = l;
       let shortUrl = null;
@@ -918,13 +1122,17 @@
     $('#btnClosePreview').addEventListener('click', closePreview);
     $('#btnClosePreview2').addEventListener('click', closePreview);
     el.previewOverlay.addEventListener('click', (e)=>{ if(e.target===el.previewOverlay) closePreview(); });
-    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && el.previewOverlay.classList.contains('open')) closePreview(); });
+    document.addEventListener('keydown', (e)=>{
+      if(e.key !== 'Escape') return;
+      if(el.letterExpand.classList.contains('open')){ closeExpand(); return; }
+      if(el.previewOverlay.classList.contains('open')) closePreview();
+    });
     window.addEventListener('resize', ()=> syncAllTails(document));
 
     $('#btnDownloadCard').addEventListener('click', ()=>{ window.print(); });
     $('#btnPetalsPreview').addEventListener('click', ()=> fallingPetals(24));
     $('#btnWhatsApp').addEventListener('click', async ()=>{
-      const longUrl = encodeStateToURL();
+      const longUrl = encodeStateToURL({}, true);
       let url = longUrl;
       showToast('Menyiapkan link WhatsApp... ⏳');
       // coba pendekin dulu biar tidak kepanjangan di WA (seperti di screenshot)

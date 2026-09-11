@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Blooms of Love — Digital Bouquet Studio</title>
   <meta name="description" content="Rangkai digital bouquet ala Digibouquet — pilih bunga A-Z, greenery, kartu & surat, lalu kirim via link. Color & Mono." />
-  <link rel="stylesheet" href="css/style.css?v=20260912i" />
+  <link rel="stylesheet" href="css/style.css?v=20260912j" />
 </head>
 <body>
   <div class="petals-bg" id="petalsBg" aria-hidden="true"></div>
@@ -263,9 +263,19 @@ Selalu milikmu,</textarea>
               <button type="button" class="font-pill" data-font="playfair">Playfair — Klasik</button>
             </div>
           </div>
+          <div class="field">
+            <label>Gambar di Surat (maks 3)</label>
+            <div style="display:flex; gap:8px; flex-wrap:wrap">
+              <label class="btn btn-ghost btn-small" for="letterImgInput" style="cursor:pointer">🖼️ + Tambah Gambar</label>
+              <input id="letterImgInput" class="hidden" type="file" accept="image/*" multiple />
+              <button class="btn btn-ghost btn-small" id="btnClearStickers" type="button">Hapus Gambar</button>
+            </div>
+            <p class="muted" style="font-size:11px; margin:6px 0 0">Gambar ikut tersimpan & terkirim via link. Drag teks/gambar di kertas untuk geser, klik kertas untuk memperbesar.</p>
+          </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px">
             <button class="btn btn-ghost btn-small" id="btnClearText" type="button">Kosongkan Teks</button>
             <button class="btn btn-ghost btn-small" id="btnSampleText" type="button">Contoh Pesan Manis</button>
+            <button class="btn btn-ghost btn-small" id="btnResetTeksPos" type="button">↺ Reset Posisi Teks</button>
           </div>
         </div>
 
@@ -277,12 +287,13 @@ Selalu milikmu,</textarea>
               <div class="seal" id="seal">❤</div>
             </div>
           </div>
-          <div class="letter-paper card-ivory" id="letterPaper">
+          <div class="letter-paper card-ivory clickable" id="letterPaper">
             <div class="letter-to">Untuk: <strong id="letterTo">For My Beloved</strong></div>
             <div class="letter-body font-dancing" id="letterBody">Hai sayang, ...</div>
             <div class="letter-from">Dari: <strong id="letterFrom">Dari Aku yang Selalu Mencintaimu</strong></div>
+            <div class="stickers" id="stickerLayer"></div>
           </div>
-          <div class="muted" style="font-size:11px; margin-top:8px">Live preview — teks update otomatis saat kamu mengetik.</div>
+          <div class="muted" style="font-size:11px; margin-top:8px">Live preview — teks update otomatis saat kamu mengetik. 💡 Klik kertas untuk memperbesar.</div>
         </div>
       </div>
 
@@ -307,6 +318,17 @@ Selalu milikmu,</textarea>
       </div>
     </section>
   </main>
+
+  <!-- EXPAND SURAT (klik kertas untuk memperbesar) -->
+  <div class="expand-overlay" id="letterExpand" aria-hidden="true">
+    <div class="expand-shell">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:10px">
+        <button class="btn btn-ghost" id="btnCloseExpand" type="button">✕ Tutup</button>
+      </div>
+      <div class="letter-paper static card-ivory" id="expandPaper"></div>
+      <div class="muted" style="font-size:11px; margin-top:8px; text-align:center; color:#D8CFC4">Klik di luar kertas atau ✕ untuk menutup</div>
+    </div>
+  </div>
 
   <!-- PREVIEW OVERLAY (Step 4) -->
   <div class="preview-overlay" id="previewOverlay" aria-hidden="true">
@@ -334,10 +356,11 @@ Selalu milikmu,</textarea>
         <div class="preview-card">
           <div class="pad">
             <div style="font-weight:700; letter-spacing:.2px">💌 Card</div>
-            <div class="letter-paper" id="previewLetterPaper" style="margin-top:12px">
+            <div class="letter-paper static clickable" id="previewLetterPaper" style="margin-top:12px">
               <div class="letter-to">Untuk: <strong id="previewLetterTo">—</strong></div>
               <div class="letter-body" id="previewLetterBody">—</div>
               <div class="letter-from">Dari: <strong id="previewLetterFrom">—</strong></div>
+              <div class="stickers" id="previewStickerLayer"></div>
             </div>
             <div class="share-row">
               <input id="shareLinkInput" readonly placeholder="Link hadiah akan muncul di sini..." />
@@ -380,6 +403,6 @@ Selalu milikmu,</textarea>
 
   <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
   <script src="js/flowers-data.js?v=20260912c"></script>
-  <script src="js/app.js?v=20260912e"></script>
+  <script src="js/app.js?v=20260912f"></script>
 </body>
 </html>
