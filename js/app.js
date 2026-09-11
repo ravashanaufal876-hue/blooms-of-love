@@ -1225,16 +1225,18 @@
     function giClearTimers(){ _giTimers.forEach(clearTimeout); _giTimers = []; }
     function renderGiftIntroBouquet(){
       if(!el.giBouquet) return;
-      const items = state.bouquet.slice(0, 10);
+      const items = state.bouquet;
+      const _g = (window.greenerySVG) ? window.greenerySVG(state.greenery) : '';
+      const _gs = state.greenery === 'eucalyptus' ? 'width:330px; height:310px;' : 'width:260px; height:245px;';
       el.giBouquet.innerHTML = `
+        <div class="greenery-layer show ${state.greenery}" style="left:50%; top:36%; transform:translate(-50%,-50%); ${_gs} opacity:1">${_g}</div>
         <div class="wrapper-layer ${state.wrapper}" style="width:170px;height:170px;bottom:6px"></div>
         ${ribbonInlineHTML(state.ribbon, state.ribbonText, 'bottom:30px; min-width:76px; height:24px; font-size:9px; padding:0 10px')}
         ${items.map((item, idx)=>{
           const f = flowerById(item.flowerId);
           if(!f) return '';
-          return `<div class="gi-bloom" style="left:${item.x}%; top:${item.y}%; animation-delay:${0.25 + idx * 0.13}s; z-index:${10 + idx}"><div style="transform:rotate(${item.rotation}deg) scale(${item.scale * 0.8})">${window.flowerSVG(f, 72)}</div></div>`;
+          return `<div class="gi-bloom" style="left:${item.x}%; top:${item.y}%; animation-delay:${0.25 + Math.min(idx, 12) * 0.13}s; z-index:${10 + idx}"><div style="transform:rotate(${item.rotation}deg) scale(${item.scale * 0.8})">${window.flowerSVG(f, 72)}</div></div>`;
         }).join('')}`;
-      syncAllTails(el.giBouquet);
     }
     function giPetals(n){
       if(!el.giPetals) return;
