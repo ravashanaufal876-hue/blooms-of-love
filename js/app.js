@@ -130,6 +130,7 @@
     musicInput: $('#musicInput'),
     musicPlayerMini: $('#musicPlayerMini'),
     musicPlayerPreview: $('#musicPlayerPreview'),
+    giMusic: $('#giMusic'),
     imgbbKeyInput: $('#imgbbKeyInput'),
     giftIntro: $('#giftIntro'),
     giCaption: $('#giCaption'),
@@ -1295,6 +1296,9 @@
       el.giftIntro.classList.add('open');
       el.giftIntro.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
+      syncAllTails(el.giBouquet);
+      paintMusicPlayer(el.giMusic, false);
+      requestAnimationFrame(()=>{ syncAllTails(el.giBouquet); });
       giStars(); giPetals(16);
       giLater(()=> giSparkles(10), 900);
       giLater(()=> { el.giBouquet.classList.add('floating'); }, 1100);
@@ -1339,7 +1343,7 @@
       el.giftIntro = $('#giftIntro'); el.giCaption = $('#giCaption'); el.giTo = $('#giTo');
       el.giBouquet = $('#giBouquet'); el.giPetals = $('#giPetals'); el.giStars = $('#giStars');
       el.giLetterWrap = $('#giLetterWrap'); el.giHint = $('#giHint'); el.giEnvelope = $('#giEnvelope');
-      el.giLetter = $('#giLetter');
+      el.giLetter = $('#giLetter'); el.giMusic = $('#giMusic');
       if(ok) return;
       const old = $('#giftIntro');
       if(old && old.parentElement) old.parentElement.removeChild(old);
@@ -1361,6 +1365,7 @@
               <div class="seal">❤</div>
             </div>
             <div class="letter-paper static gi-letter" id="giLetter"></div>
+            <div class="gi-music" id="giMusic"></div>
             <button class="btn btn-primary" id="btnGiOpen" type="button" style="display:none">💐 Lihat Buket Lengkap</button>
           </div>
         </div>
@@ -1369,7 +1374,7 @@
       el.giftIntro = $('#giftIntro'); el.giCaption = $('#giCaption'); el.giTo = $('#giTo');
       el.giBouquet = $('#giBouquet'); el.giPetals = $('#giPetals'); el.giStars = $('#giStars');
       el.giLetterWrap = $('#giLetterWrap'); el.giHint = $('#giHint'); el.giEnvelope = $('#giEnvelope');
-      el.giLetter = $('#giLetter');
+      el.giLetter = $('#giLetter'); el.giMusic = $('#giMusic');
       const sk = $('#btnGiSkip');
       if(sk) sk.addEventListener('click', ()=> closeGiftIntro(true));
       const op = $('#btnGiOpen');
@@ -1600,6 +1605,7 @@
       if(el.previewOverlay.classList.contains('open')) closePreview();
     });
     window.addEventListener('resize', ()=> syncAllTails(document));
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=> syncAllTails(document));
 
     $('#btnDownloadCard').addEventListener('click', ()=>{ window.print(); });
     $('#btnPetalsPreview').addEventListener('click', ()=> fallingPetals(24));
