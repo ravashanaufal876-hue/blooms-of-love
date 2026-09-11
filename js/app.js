@@ -269,7 +269,7 @@
     } catch(e){ return null; }
   }
   const _rx = (v)=> Math.round(Number(v)*10)/10;
-  async function buildShareLetter(){
+  async function buildShareLink(){
     // samakan dengan shareLetter(), tapi dataURL di-upload dulu bila bisa
     const L = state.letter;
     const out = [];
