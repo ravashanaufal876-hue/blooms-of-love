@@ -187,20 +187,28 @@
     renderHeroPreview();
     // Jika dibuka via link share (?gift=), mainkan opening sinematik dulu — biar pacar tidak lihat editor
     if(fromURL){
-      // delay sedikit biar DOM siap, lalu mainkan intro gift
+      // delay sedikit biar DOM siap, lalu mainkan intro gift (anti-gagal-diam: fallback + pesan error)
       setTimeout(()=>{
-        const openIntro = window._openGiftIntro || null;
-        if(openIntro) openIntro();
-        else {
-          const openPreview = window._openPreview || null;
-          if(openPreview) openPreview();
+        let ok = false, errMsg = '';
+        try{
+          const openIntro = window._openGiftIntro || null;
+          if(openIntro){ openIntro(); ok = true; }
+          else {
+            const openPreview = window._openPreview || null;
+            if(openPreview){ openPreview(); ok = true; }
+            else errMsg = 'fungsi pembuka tidak ada';
+          }
+        }catch(err){
+          console.error('gift intro gagal:', err);
+          errMsg = (err && err.message) || String(err);
+          try{ const p = window._openPreview; if(p){ p(); ok = true; errMsg = ''; } }catch(e2){}
         }
         document.documentElement.classList.add('gift-mode');
-        showToast('Hadiah dibuka 💌 — klik ✕ untuk lihat studio');
+        showToast(ok ? 'Hadiah dibuka 💌 — klik ✕ untuk lihat studio' : ('Gagal buka hadiah: ' + errMsg + ' ⚠️'));
       }, 450);
     } else if(hasGiftParam){
       // ada ?gift= tapi datanya tidak bisa dibaca (kepotong / kadaluarsa) — kasih tahu, jangan diam-diam buka studio
-      setTimeout(()=> showToast('Link hadiah rusak/kepotong ⚠️ — minta kirim ulang link-nya'), 800);
+      setTimeout(()=> showToast('Link hadiah bermasalah (' + (giftLoadError || 'tidak-terbaca') + ') ⚠️ — minta kirim ulang link-nya'), 800);
     }
   }
 
@@ -374,11 +382,12 @@
   function loadFromURL(){
     const sp = new URLSearchParams(location.search);
     const g = sp.get('gift');
-    if(!g) return false;
+    if(!g){ giftLoadError = ''; return false; }
     try{
       const raw = decompressPayload(g);
-      if(!raw) return false;
+      if(!raw){ giftLoadError = 'decode-gagal'; return false; }
       const data = JSON.parse(raw);
+      if(!data || typeof data !== 'object'){ giftLoadError = 'format-aneh'; return false; }
       if(Array.isArray(data.b)){
         // dukung 2 format: lama (array of object) & baru slim (array of array)
         if(data.b.length && Array.isArray(data.b[0])){
@@ -405,9 +414,11 @@
       uidCounter = Math.max(1, ...state.bouquet.map(b=> Number(b.uid)||0)) + 1;
       stickerUid = Math.max(1, ...state.letter.imgs.map(s=> Number(String(s.id).replace(/^s/,''))||0)) + 1;
       state.step = 4;
+      giftLoadError = '';
       return true;
-    } catch(e){ return false; }
+    } catch(e){ giftLoadError = 'json-rusak:' + (e && e.message ? e.message : e); return false; }
   }
+  let giftLoadError = '';
 
   // helpers
   function showToast(msg){
@@ -1232,6 +1243,9 @@
       }
     }
     function openGiftIntro(){
+      if(!el.giftIntro || !el.giBouquet || !el.giLetterWrap || !el.giEnvelope || !el.giTo || !el.giCaption || !el.giHint){
+        throw new Error('komponen intro tidak ketemu (HTML lama? hard-refresh Ctrl+Shift+R)');
+      }
       if(!el.giftIntro) { if(window._openPreview) window._openPreview(); return; }
       renderGiftIntroBouquet();
       giClearTimers();
