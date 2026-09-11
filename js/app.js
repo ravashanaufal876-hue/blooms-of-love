@@ -149,6 +149,9 @@
     giHint: $('#giHint'),
     giEnvelope: $('#giEnvelope'),
     giLetter: $('#giLetter'),
+    giGate: $('#giGate'),
+    giStage1: $('#giStage1'),
+    giSteps: $('#giSteps'),
     envelope: $('#envelope'),
     sealHint: $('#sealHint'),
     previewOverlay: $('#previewOverlay'),
@@ -1221,8 +1224,32 @@
     window._openExpand = openExpand;
     // --- GIFT INTRO sinematik (khusus dibuka via link) ---
     let _giTimers = [];
+    let _giTypeTimer = null;
     function giLater(fn, ms){ _giTimers.push(setTimeout(fn, ms)); }
-    function giClearTimers(){ _giTimers.forEach(clearTimeout); _giTimers = []; }
+    function giClearTimers(){ _giTimers.forEach(clearTimeout); _giTimers = []; if(_giTypeTimer){ clearInterval(_giTypeTimer); _giTypeTimer = null; } }
+    // Lonceng lembut via WebAudio (tanpa file) — dibuka oleh tap user jadi boleh bunyi
+    let _giAudio = null;
+    function giTone(freq, delay, dur){
+      try{
+        _giAudio = _giAudio || new (window.AudioContext || window.webkitAudioContext)();
+        if(_giAudio.state === 'suspended') _giAudio.resume();
+        const o = _giAudio.createOscillator(), g = _giAudio.createGain();
+        o.type = 'sine'; o.frequency.value = freq;
+        const t = _giAudio.currentTime + delay;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.12, t + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g); g.connect(_giAudio.destination);
+        o.start(t); o.stop(t + dur + 0.05);
+      }catch(e){}
+    }
+    function giChime(kind){
+      const seq = kind === 'open' ? [523.25, 659.25, 783.99, 1046.5]
+        : kind === 'pop' ? [659.25, 783.99]
+        : kind === 'seal' ? [392, 523.25, 659.25]
+        : [523.25, 659.25, 783.99, 1046.5, 1318.5];
+      seq.forEach((f, i)=> giTone(f, i * 0.12, 0.55));
+    }
     function renderGiftIntroBouquet(){
       if(!el.giBouquet) return;
       const items = state.bouquet;
@@ -1235,7 +1262,9 @@
         ${items.map((item, idx)=>{
           const f = flowerById(item.flowerId);
           if(!f) return '';
-          return `<div class="gi-bloom" style="left:${item.x}%; top:${item.y}%; animation-delay:${0.25 + Math.min(idx, 12) * 0.13}s; z-index:${10 + idx}"><div style="transform:rotate(${item.rotation}deg) scale(${item.scale * 0.8})">${window.flowerSVG(f, 72)}</div></div>`;
+          const fx = Math.round(Math.random() * 360 - 180), fy = Math.round(60 + Math.random() * 170);
+          const dl = (0.15 + Math.min(idx, 12) * 0.12).toFixed(2);
+          return `<div class="gi-bloom" style="left:${item.x}%; top:${item.y}%; --fx:${fx}px; --fy:${fy}px; transition-delay:${dl}s; z-index:${10 + idx}"><div style="transform:rotate(${item.rotation}deg) scale(${item.scale * 0.8})">${window.flowerSVG(f, 72)}</div></div>`;
         }).join('')}`;
     }
     function giPetals(n){
@@ -1291,38 +1320,107 @@
       if(!el.giftIntro) { if(window._openPreview) window._openPreview(); return; }
       renderGiftIntroBouquet();
       giClearTimers();
-      el.giBouquet.classList.remove('lifted', 'floating');
+      el.giBouquet.classList.remove('lifted', 'floating', 'settled');
       el.giLetterWrap.classList.remove('show');
       el.giEnvelope.classList.remove('open');
       el.giLetter.className = 'letter-paper static gi-letter';
       el.giLetter.innerHTML = '';
       const btn = $('#btnGiOpen');
       if(btn) btn.style.display = 'none';
+      if(el.giGate){ el.giGate.classList.remove('opened', 'gone'); }
+      if(el.giStage1){ el.giStage1.classList.add('gi-hidden'); }
+      giSteps(0);
       const to = (state.letter.recipient || 'Beloved').replace(/^For\s+/i, '');
       el.giTo.textContent = `Hadiah untukmu, ${to} 🌸`;
-      el.giCaption.textContent = '💌 Kamu dapat hadiah…';
+      el.giCaption.textContent = 'Ada hadiah untukmu 🎁';
       el.giHint.textContent = 'Siapkan hatimu… ✨';
+      el.giHint.classList.remove('bounce');
       el.giftIntro.classList.add('open');
       el.giftIntro.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
-      syncAllTails(el.giBouquet);
       paintMusicPlayer(el.giMusic, false);
-      requestAnimationFrame(()=>{ syncAllTails(el.giBouquet); });
-      giStars(); giPetals(16);
-      giLater(()=> giSparkles(10), 900);
-      giLater(()=> { el.giBouquet.classList.add('floating'); }, 1100);
-      giLater(()=> {
-        el.giCaption.textContent = `Dibuat khusus untuk ${to} ✨`;
-        el.giBouquet.classList.remove('floating');
-        el.giBouquet.classList.add('lifted');
-        giSparkles(8);
-      }, 2300);
-      giLater(()=> {
-        el.giLetterWrap.classList.add('show');
-        el.giHint.textContent = 'Ketuk segel untuk membuka surat 💌';
-        giPetals(8);
-      }, 3200);
+      giStars(); giPetals(10);
       playClickSound();
+    }
+    function giSteps(n){
+      const w = el.giSteps || document.getElementById('giSteps');
+      if(!w) return;
+      Array.prototype.forEach.call(w.children, (s, i)=> s.classList.toggle('on', i < n));
+    }
+    // Tahap 1 dimulai dari ketukan di kado (gesture = izin bunyi + autoplay)
+    function giStartShow(){
+      if(!el.giGate || el.giGate.classList.contains('opened')) return;
+      giChime('open');
+      el.giGate.classList.add('opened');
+      giSparkles(14); giPetals(10);
+      const to = (state.letter.recipient || 'Beloved').replace(/^For\s+/i, '');
+      giLater(()=>{
+        if(el.giGate) el.giGate.classList.add('gone');
+        if(el.giStage1) el.giStage1.classList.remove('gi-hidden');
+        el.giCaption.textContent = '💌 Kamu dapat hadiah…';
+        giSteps(1);
+        syncAllTails(el.giBouquet);
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{ if(el.giBouquet) el.giBouquet.classList.add('settled'); }));
+        giLater(()=>{ giSparkles(10); giChime('pop'); }, 1000);
+        giLater(()=>{ if(el.giBouquet) el.giBouquet.classList.add('floating'); }, 2500);
+        giLater(()=>{
+          el.giCaption.textContent = `Dibuat khusus untuk ${to} ✨`;
+          if(el.giBouquet){ el.giBouquet.classList.remove('floating'); el.giBouquet.classList.add('lifted'); }
+          giSparkles(8);
+        }, 3600);
+        giLater(()=>{
+          el.giLetterWrap.classList.add('show');
+          giSteps(2);
+          el.giHint.textContent = 'Ketuk segel untuk membuka surat 💌';
+          el.giHint.classList.add('bounce');
+          giPetals(8);
+        }, 4500);
+      }, 650);
+    }
+    // Semburan kilau mengikuti ketukan jari di area intro
+    function giTapBurst(e){
+      try{
+        const t = e.target;
+        if(t && t.closest && t.closest('button, .gi-envelope, iframe, audio, input, label, textarea, a')) return;
+        const layer = el.giftIntro;
+        if(!layer || !layer.classList.contains('open')) return;
+        const r = layer.getBoundingClientRect();
+        const cx = (e.clientX - r.left) / r.width * 100, cy = (e.clientY - r.top) / r.height * 100;
+        for(let i = 0; i < 5; i++){
+          const s = document.createElement('div');
+          s.className = 'sparkle';
+          s.style.left = 'calc(' + cx.toFixed(1) + '% + ' + Math.round(Math.random() * 60 - 30) + 'px)';
+          s.style.top = 'calc(' + cy.toFixed(1) + '% + ' + Math.round(Math.random() * 60 - 30) + 'px)';
+          s.style.width = '7px'; s.style.height = '7px';
+          layer.appendChild(s);
+          setTimeout(()=> s.remove(), 1700);
+        }
+      }catch(_){}
+    }
+    // Surat diketik huruf-per-huruf; ketuk teks untuk langsung selesaikan
+    function giTypewrite(node, text, done){
+      if(_giTypeTimer){ clearInterval(_giTypeTimer); _giTypeTimer = null; }
+      const full = String(text == null ? '' : text);
+      node.classList.add('typing');
+      let i = 0;
+      node.textContent = '';
+      _giTypeTimer = setInterval(()=>{
+        i += 8;
+        node.textContent = full.slice(0, i);
+        if(i >= full.length){
+          clearInterval(_giTypeTimer); _giTypeTimer = null;
+          node.classList.remove('typing');
+          if(done) done();
+        }
+      }, 40);
+      node.onclick = ()=>{
+        if(_giTypeTimer){
+          clearInterval(_giTypeTimer); _giTypeTimer = null;
+          node.textContent = full;
+          node.classList.remove('typing');
+          if(done) done();
+        }
+      };
     }
     function closeGiftIntro(toPreview){
       giClearTimers();
@@ -1345,14 +1443,19 @@
         ge.addEventListener('click', openGiLetter);
         ge.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openGiLetter(); } });
       }
+      const gt = document.getElementById('giGate');
+      if(gt && !gt.dataset.bound){ gt.dataset.bound = '1'; gt.addEventListener('click', giStartShow); }
+      const ov = document.getElementById('giftIntro');
+      if(ov && !ov.dataset.burst){ ov.dataset.burst = '1'; ov.addEventListener('pointerdown', giTapBurst); }
     }
     // Bulletproof: kalau HTML yang ke-load basi (tanpa blok intro), bangun DOM intro dari JS
     function ensureGiftIntroDOM(){
-      const ok = $('#giftIntro') && $('#giBouquet') && $('#giEnvelope') && $('#btnGiOpen') && $('#giLetterWrap');
+      const ok = $('#giftIntro') && $('#giBouquet') && $('#giEnvelope') && $('#btnGiOpen') && $('#giLetterWrap') && $('#giGate') && $('#giStage1');
       el.giftIntro = $('#giftIntro'); el.giCaption = $('#giCaption'); el.giTo = $('#giTo');
       el.giBouquet = $('#giBouquet'); el.giPetals = $('#giPetals'); el.giStars = $('#giStars');
       el.giLetterWrap = $('#giLetterWrap'); el.giHint = $('#giHint'); el.giEnvelope = $('#giEnvelope');
       el.giLetter = $('#giLetter'); el.giMusic = $('#giMusic');
+      el.giGate = $('#giGate'); el.giStage1 = $('#giStage1'); el.giSteps = $('#giSteps');
       if(ok) return;
       const old = $('#giftIntro');
       if(old && old.parentElement) old.parentElement.removeChild(old);
@@ -1363,8 +1466,14 @@
         <div class="gi-stars" id="giStars"></div>
         <button class="btn btn-ghost btn-small gi-skip" id="btnGiSkip" type="button">Lewati →</button>
         <div class="gi-stage">
-          <div class="gi-caption" id="giCaption">💌 Kamu dapat hadiah…</div>
+          <div class="gi-caption" id="giCaption">Ada hadiah untukmu 🎁</div>
           <div class="gi-to" id="giTo">Hadiah untukmu 🌸</div>
+          <div class="gi-steps" id="giSteps"><span>Buket</span><span>Surat</span><span>Hadiah</span></div>
+          <button class="gi-gate" id="giGate" type="button" aria-label="Buka hadiah">
+            <span class="gi-box"><span class="gi-lid"></span><span class="gi-bow"></span></span>
+            <span class="gi-gate-hint">Ketuk kadonya 🎁</span>
+          </button>
+          <div id="giStage1" class="gi-hidden" style="display:flex; flex-direction:column; align-items:center; gap:8px; width:100%">
           <div class="gi-bouquet" id="giBouquet"></div>
           <div class="gi-letter-wrap" id="giLetterWrap">
             <div class="gi-hint" id="giHint">Siapkan hatimu… ✨</div>
@@ -1377,6 +1486,7 @@
             <div class="gi-music" id="giMusic"></div>
             <button class="btn btn-primary" id="btnGiOpen" type="button" style="display:none">💐 Lihat Buket Lengkap</button>
           </div>
+          </div>
         </div>
       </div>`;
       document.body.appendChild(d.firstElementChild);
@@ -1384,20 +1494,14 @@
       el.giBouquet = $('#giBouquet'); el.giPetals = $('#giPetals'); el.giStars = $('#giStars');
       el.giLetterWrap = $('#giLetterWrap'); el.giHint = $('#giHint'); el.giEnvelope = $('#giEnvelope');
       el.giLetter = $('#giLetter'); el.giMusic = $('#giMusic');
-      const sk = $('#btnGiSkip');
-      if(sk) sk.addEventListener('click', ()=> closeGiftIntro(true));
-      const op = $('#btnGiOpen');
-      if(op) op.addEventListener('click', ()=> closeGiftIntro(true));
-      const ge = $('#giEnvelope');
-      if(ge){
-        ge.addEventListener('click', openGiLetter);
-        ge.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openGiLetter(); } });
-      }
+      el.giGate = $('#giGate'); el.giStage1 = $('#giStage1'); el.giSteps = $('#giSteps');
+      bindIntroControls();
     }
     function openGiLetter(){
       if(!el.giEnvelope || el.giEnvelope.classList.contains('open')) return;
       el.giEnvelope.classList.add('open');
-      playClickSound(); giPetals(12); giSparkles(10);
+      el.giHint.classList.remove('bounce');
+      playClickSound(); giChime('seal'); giPetals(12); giSparkles(10);
       setTimeout(()=>{
         const L = state.letter;
         const cls = MAP_CARD[state.cardStyle] || 'card-ivory';
@@ -1405,12 +1509,20 @@
         el.giLetter.className = 'letter-paper static gi-letter show ' + cls;
         el.giLetter.innerHTML = `
           <div class="letter-to">Untuk: <strong>${escHtml(L.recipient || '—')}</strong></div>
-          <div class="letter-body ${fcls}" style="transform:translate(${Number(L.textX) || 0}px, ${Number(L.textY) || 0}px)">${escHtml(L.message || '—')}</div>
+          <div class="letter-body ${fcls}" style="transform:translate(${Number(L.textX) || 0}px, ${Number(L.textY) || 0}px)"></div>
           <div class="letter-from">Dari: <strong>${escHtml(L.sender || '—')}</strong></div>
           <div class="stickers">${(L.imgs || []).map(x=>`<div class="sticker" style="left:${Number(x.x) || 0}%; top:${Number(x.y) || 0}%; width:${Number(x.w) || 34}%"><img src="${x.src}" alt="gambar surat"/></div>`).join('')}</div>`;
-        el.giHint.textContent = 'Dibuka dengan cinta 💌';
-        const btn = $('#btnGiOpen');
-        if(btn){ btn.style.display = ''; btn.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+        el.giHint.textContent = 'Bacalah pelan-pelan 💌 (ketuk teks untuk lewati)';
+        const bodyNode = el.giLetter.querySelector('.letter-body');
+        giTypewrite(bodyNode, L.message || '—', ()=>{
+          el.giHint.textContent = 'Dibuka dengan cinta 💌';
+          el.giCaption.textContent = 'Satu lagi untukmu 💐';
+          giSteps(3);
+          giChime('done');
+          giPetals(16); giSparkles(14);
+          const btn = $('#btnGiOpen');
+          if(btn){ btn.style.display = ''; btn.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+        });
       }, 650);
     }
     // tap (tanpa geser) di kertas preview → perbesar
