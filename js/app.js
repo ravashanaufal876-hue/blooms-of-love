@@ -325,11 +325,12 @@
 
   function syncMode(){
     document.body.classList.toggle('mono', state.mode==='mono');
+    document.body.classList.toggle('dark', state.mode==='dark');
     el.bouquetStage.classList.toggle('mono', state.mode==='mono');
     el.previewBouquet.classList.toggle('mono', state.mode==='mono');
     el.heroBouquetPreview.classList.toggle('mono', state.mode==='mono');
     $$('.mode-btn').forEach(b=> b.classList.toggle('active', b.dataset.mode===state.mode));
-    $('#modeHint').textContent = state.mode==='mono' ? 'Mono: quiet & editorial' : 'Color: lush & celebratory';
+    $('#modeHint').textContent = state.mode==='mono' ? 'Mono: quiet & editorial' : state.mode==='dark' ? 'Dark: adem di mata 🌙' : 'Color: lush & celebratory';
   }
   function syncGreenery(){
     $$('#greeneryChoices .chip').forEach(x=> x.classList.toggle('active', x.dataset.greenery===state.greenery));
@@ -638,7 +639,7 @@
       b.addEventListener('click', ()=>{
         state.mode = b.dataset.mode;
         syncMode(); saveToLS(); updateShareLink(); renderPreviewBouquet(); renderGarden();
-        showToast(state.mode==='mono' ? 'Mode Mono — editorial 🖤' : 'Mode Color — warm 🌸');
+        showToast(state.mode==='mono' ? 'Mode Mono — editorial 🖤' : state.mode==='dark' ? 'Mode Dark — adem 🌙' : 'Mode Color — warm 🌸');
         playClickSound();
       });
     });

@@ -524,6 +524,86 @@ button{font:inherit}
 .hidden{display:none !important}
 .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0}
 .footer{border-top:1px solid var(--line); background:rgba(255,255,255,.7); margin-top:14px}
+
+/* ============ DARK MODE — adem di mata 🌙 ============ */
+body.dark{
+  --bg:#141010;
+  --paper:#1E1A17;
+  --ink:#F5EFE8;
+  --muted:#A89E96;
+  --line:#2E2823;
+  --line-strong:#3D352D;
+  --accent:#F5EFE8;
+  --accent-soft:#3A2E28;
+  --shadow:0 10px 30px rgba(0,0,0,.45);
+  --shadow-lg:0 18px 44px rgba(0,0,0,.55);
+  background:
+    radial-gradient(900px 520px at 18% 0%, #2A1E16 0%, transparent 62%),
+    radial-gradient(800px 600px at 92% 6%, #241A14 0%, transparent 58%),
+    linear-gradient(180deg, #141010, #141010);
+  color:var(--ink);
+}
+body.dark .site-header{background:rgba(20,16,16,.86)}
+body.dark .brand-mark{background:#241E1A}
+body.dark .badge-count{background:#241E1A; color:var(--ink)}
+body.dark .btn-primary{background:#F5EFE8; color:#141010; border-color:#F5EFE8}
+body.dark .btn-ghost{background:#241E1A; color:var(--ink)}
+body.dark .btn-ghost:hover{box-shadow:var(--shadow)}
+body.dark .hero-inner{background:linear-gradient(180deg,#1E1A17,#191411); border-color:var(--line)}
+body.dark .hero h1 span{color:#C9B7A6}
+body.dark .hero-desc{color:#D8CFC4}
+body.dark .hero-bouquet-card{background:radial-gradient(500px 220px at 50% 0%, #2A1E16, transparent 65%), linear-gradient(180deg, #1E1A17, #191411); border-color:var(--line)}
+body.dark .hero-bouquet-stage{background:#100D0B; border-color:var(--line)}
+body.dark .hero-card-note{background:#241E1A; border-color:var(--line)}
+body.dark .mini-letter{color:var(--ink)}
+body.dark .mode-inner{background:rgba(30,26,23,.92)}
+body.dark .mode-btn{background:#241E1A; color:var(--ink)}
+body.dark .mode-btn.active{background:#F5EFE8; color:#141010; border-color:#F5EFE8}
+body.dark .stepper-inner{background:rgba(20,16,16,.92)}
+body.dark .step.active{background:#241E1A}
+body.dark .step-num{background:#F5EFE8; color:#141010}
+body.dark .card{background:var(--paper)}
+body.dark .card-sub{color:#C9BFB2}
+body.dark .search-wrap input{background:#241E1A; color:var(--ink)}
+body.dark .search-wrap input::placeholder{color:#8A7F73}
+body.dark .search-wrap input:focus{border-color:#F5EFE8; box-shadow:0 0 0 4px rgba(245,239,232,.08)}
+body.dark .alpha-btn{background:#241E1A; color:var(--ink)}
+body.dark .alpha-btn.active, body.dark .alpha-btn:hover{background:#F5EFE8; color:#141010; border-color:#F5EFE8}
+body.dark .flower-card{background:linear-gradient(180deg,#241E1A,#1E1A17)}
+body.dark .flower-visual{background:radial-gradient(380px 200px at 50% 18%, #2A211B, #1E1A17 62%); border-color:#2E2823}
+body.dark .badge-meaning{background:#2A231E; color:#E8DCC8}
+body.dark .flower-desc{color:#C9BFB2}
+body.dark .btn-add{background:transparent; border-color:#F5EFE8; color:var(--ink)}
+body.dark .btn-add:hover, body.dark .btn-add.added{background:#F5EFE8; color:#141010}
+body.dark .field input, body.dark .field textarea{background:#241E1A; color:var(--ink)}
+body.dark .field input::placeholder, body.dark .field textarea::placeholder{color:#8A7F73}
+body.dark .field input:focus, body.dark .field textarea:focus{border-color:#F5EFE8; box-shadow:0 0 0 4px rgba(245,239,232,.08)}
+body.dark .chip{background:#241E1A; color:var(--ink)}
+body.dark .chip.active{background:#F5EFE8; color:#141010; border-color:#F5EFE8}
+body.dark .bouquet-stage{background:radial-gradient(520px 280px at 50% 0%, #2A1E16 0%, transparent 62%), linear-gradient(180deg, #1A1512, #141010)}
+body.dark .empty-hint{background:rgba(36,30,26,.95)}
+body.dark .bouquet-item{background:#241E1A}
+body.dark .bouquet-item .thumb{background:#2A231E}
+body.dark .range{accent-color:#D4A373}
+body.dark .mini-btn{background:#241E1A; color:var(--ink)}
+body.dark .mini-btn:hover{background:#F5EFE8; color:#141010; border-color:#F5EFE8}
+body.dark .card-style{background:#241E1A}
+body.dark .card-style.active{border-color:#F5EFE8}
+body.dark .font-pill{background:#241E1A; color:var(--ink)}
+body.dark .font-pill.active{background:#F5EFE8; color:#141010; border-color:#F5EFE8}
+body.dark .panel-actions{background:linear-gradient(180deg,#1E1A17,#191411)}
+body.dark .garden-card{background:#1E1A17}
+body.dark .garden-thumb{background:#100D0B}
+body.dark .preview-overlay{background:rgba(14,11,10,.97)}
+body.dark .preview-card{background:#1E1A17}
+body.dark .preview-bouquet{background:radial-gradient(600px 320px at 50% 0%, #2A1E16, #141010); border-color:var(--line)}
+body.dark .share-row input{background:#241E1A; color:var(--ink)}
+body.dark .footer{background:rgba(20,16,16,.85)}
+body.dark .toast{background:#F5EFE8; color:#141010}
+/* kertas surat & amplop tetap terang (kertas di atas meja gelap) */
+body.dark .letter-paper.card-ivory{color:#121212}
+body.dark .letter-paper.card-ivory .letter-to, body.dark .letter-paper.card-ivory .letter-from{color:#7A7472}
+body.dark .letter-paper.card-ivory .letter-to strong, body.dark .letter-paper.card-ivory .letter-from strong{color:#121212}
 @media print{
   .site-header, .hero, .mode-bar, .stepper, #garden, .panel-actions, .header-actions, .petals-bg, .toast{display:none !important}
   .preview-overlay{display:block !important; position:static; background:white}
