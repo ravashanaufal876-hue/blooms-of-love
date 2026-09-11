@@ -283,6 +283,9 @@
       if(/^data:/.test(s.src || '')){
         const url = await uploadLetterImage(s.src, 'surat-' + String(s.id || 'x') + '.jpg');
         if(url){ s.remote = url; out.push({ id:s.id, src:url, x:_rx(s.x), y:_rx(s.y), w:Number(s.w)||34 }); continue; }
+        const small = await downscaleShareImage(s.src);
+        out.push({ id:s.id, src:small || s.src, x:_rx(s.x), y:_rx(s.y), w:Number(s.w)||34 });
+        continue;
       }
       out.push({ id:s.id, src:s.src, x:_rx(s.x), y:_rx(s.y), w:Number(s.w)||34 });
     }
@@ -299,7 +302,24 @@
       kept.push(o);
     }
     if(kept.length < out.length) showToast('Sebagian gambar tidak ikut link (kebesaran) ⚠️');
-    return { recipient:L.recipient, message:L.message, sender:L.sender, font:L.font, textX:Math.round(Number(L.textX)||0), textY:Math.round(Number(L.textY)||0), imgs:kept };
+    return encodeWithLetter({ recipient:L.recipient, message:L.message, sender:L.sender, font:L.font, textX:Math.round(Number(L.textX)||0), textY:Math.round(Number(L.textY)||0), imgs:kept });
+  }
+  // downscale darurat untuk link (kalau upload gagal): max 360px q0.62
+  function downscaleShareImage(dataUrl){
+    return new Promise((resolve)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        try{
+          const sc = Math.min(1, 360 / Math.max(img.width || 1, img.height || 1));
+          const w = Math.max(1, Math.round(img.width * sc)), h = Math.max(1, Math.round(img.height * sc));
+          const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+          cv.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(cv.toDataURL('image/jpeg', 0.62));
+        } catch(e){ resolve(null); }
+      };
+      img.onerror = ()=> resolve(null);
+      img.src = dataUrl;
+    });
   }
   function encodeWithLetter(letterObj){
     const slimBouquet = state.bouquet.map(b=>[
