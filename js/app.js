@@ -165,6 +165,8 @@
     const hasGiftParam = new URLSearchParams(location.search).has('gift');
     if(!fromURL) loadFromLS();
     else showToast('Hadiah dibuka dari link 💌');
+    if(fromURL) giftDiag('Link hadiah terbaca ✓ — menyiapkan intro…', true);
+    else if(hasGiftParam) giftDiag('Link bermasalah (' + (giftLoadError || 'tidak-terbaca') + ') — minta kirim ulang', false);
     loadGarden();
 
     el.recipientInput.value = state.letter.recipient;
@@ -204,6 +206,8 @@
           try{ const p = window._openPreview; if(p){ p(); ok = true; errMsg = ''; } }catch(e2){}
         }
         document.documentElement.classList.add('gift-mode');
+        if(ok) giftDiag('Intro hadiah dibuka ✓ — selamat menikmati!', true);
+        else giftDiag('Gagal buka hadiah: ' + errMsg, false);
         showToast(ok ? 'Hadiah dibuka 💌 — klik ✕ untuk lihat studio' : ('Gagal buka hadiah: ' + errMsg + ' ⚠️'), 8000);
       }, 450);
     } else if(hasGiftParam){
@@ -419,6 +423,19 @@
     } catch(e){ giftLoadError = 'json-rusak:' + (e && e.message ? e.message : e); return false; }
   }
   let giftLoadError = '';
+  // Papan status gift yg PERSISTEN (bukan toast) — untuk diagnosis yang tidak bisa kelewat
+  function giftDiag(msg, ok){
+    let bar = document.getElementById('giftDiagBar');
+    if(!bar){
+      bar = document.createElement('div');
+      bar.id = 'giftDiagBar';
+      document.body.insertBefore(bar, document.body.firstChild);
+    }
+    bar.className = 'gift-diag' + (ok === false ? ' bad' : '');
+    bar.innerHTML = '<span>' + escHtml(msg) + '</span> <button type="button" id="giftDiagX" aria-label="Tutup">✕</button>';
+    const x = document.getElementById('giftDiagX');
+    if(x) x.addEventListener('click', ()=>{ if(bar.parentElement) bar.parentElement.removeChild(bar); });
+  }
 
   // helpers
   function showToast(msg, ms){
