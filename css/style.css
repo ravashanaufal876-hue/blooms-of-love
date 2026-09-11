@@ -272,7 +272,7 @@ button{font:inherit}
   width:min(390px, 98%); height:min(390px, 84%);
   display:grid; place-items:center;
   opacity:0; pointer-events:none; transition:.25s opacity;
-  z-index:3;
+  z-index:1;
 }
 .greenery-layer.show{opacity:1}
 .greenery-layer.eucalyptus{
@@ -292,6 +292,7 @@ button{font:inherit}
   position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
   width:220px; height:220px; border-radius: 18px 18px 42px 42px / 18px 18px 62px 62px;
   display:grid; place-items:center; box-shadow:0 12px 28px rgba(0,0,0,.08); transition:.25s;
+  z-index:2;
 }
 .wrapper-layer.kraft{background: linear-gradient(180deg, #E9D5B8, #D4A373); border:1px solid #C99A5E}
 .wrapper-layer.silk{background: linear-gradient(180deg, #FFF0F6, #E8D9E3); border:1px solid #E8D0DC}

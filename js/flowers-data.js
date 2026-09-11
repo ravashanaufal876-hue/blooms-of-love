@@ -262,10 +262,10 @@ function flowerSVG(flower, size=100){
 
 // === GREENERY REALISTIS: foto daun Unsplash (mask radial) + SVG rimbun di atasnya ===
 const GREENERY_PHOTO = {
-  leafy:'img/greenery/leafy.png',
+  leafy:'img/greenery/leafy.webp',
   fern:'img/greenery/fern.png',
   eucalyptus:'img/greenery/eucalyptus.png',
-  willow:'img/greenery/willow.png'
+  willow:'img/greenery/willow.webp'
 };
 function _greeneryBaseSVG(type){
   // panggil implementasi SVG rimbun yang lama (dipindah ke _greeneryBase di bawah via patch)
