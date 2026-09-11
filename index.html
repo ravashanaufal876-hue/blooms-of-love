@@ -145,6 +145,7 @@
               <button class="chip" data-wrapper="silk" type="button"><span class="dot" style="background:#E8D9E3"></span> Soft Silk</button>
               <button class="chip" data-wrapper="vintage" type="button"><span class="dot" style="background:#FFF8E7"></span> Vintage</button>
               <button class="chip" data-wrapper="satin" type="button"><span class="dot" style="background:#FFE3EA"></span> Satin</button>
+              <button class="chip" data-wrapper="choco" type="button"><span class="dot" style="background:#6F4E37"></span> Choco Kraft</button>
             </div>
           </div>
 
@@ -155,6 +156,12 @@
               <button class="chip" data-ribbon="gold" type="button"><span class="dot" style="background:#D4A373"></span> Gold</button>
               <button class="chip" data-ribbon="burgundy" type="button"><span class="dot" style="background:#7A1C2E"></span> Burgundy</button>
               <button class="chip" data-ribbon="cream" type="button"><span class="dot" style="background:#FFF8E7"></span> Cream</button>
+              <button class="chip" data-ribbon="choco" type="button"><span class="dot" style="background:#6F4E37"></span> Choco</button>
+            </div>
+            <div class="field" style="margin-top:8px">
+              <label for="ribbonTextInput">Tulisan di Pita (bisa customize)</label>
+              <input id="ribbonTextInput" type="text" maxlength="24" placeholder="WITH LOVE" value="WITH LOVE" />
+              <p class="muted" style="font-size:11px; margin:6px 0 0">Contoh: WITH LOVE, Happy Birthday, Untuk Ayang 💌 — max 24 huruf.</p>
             </div>
           </div>
 
@@ -170,7 +177,7 @@
           <div class="bouquet-stage" id="bouquetStage" aria-label="Canvas buket">
             <div class="greenery-layer" id="greeneryLayer" aria-hidden="true"></div>
             <div class="wrapper-layer kraft" id="wrapperLayer"></div>
-            <div class="ribbon rose" id="ribbonEl">WITH LOVE</div>
+            <div class="ribbon rose" id="ribbonEl"><span class="ribbon-tails" aria-hidden="true"></span><span class="ribbon-knot" aria-hidden="true"></span><span class="ribbon-text" id="ribbonText">WITH LOVE</span></div>
             <div class="bouquet-flowers" id="bouquetFlowers"></div>
             <div class="empty-hint" id="emptyHint">
               <div style="font-size:22px">🌷</div>
@@ -220,6 +227,10 @@
               <button class="card-style" data-card="midnight" type="button">
                 <span class="cs-preview" style="background:#111; border-color:#333"></span>
                 <strong>Midnight</strong><small>Editorial mono</small>
+              </button>
+              <button class="card-style" data-card="choco" type="button">
+                <span class="cs-preview" style="background:linear-gradient(135deg,#6F4E37,#3E2A1E); border-color:#3E2A1E"></span>
+                <strong>Choco</strong><small>Hangat & manis</small>
               </button>
             </div>
           </div>

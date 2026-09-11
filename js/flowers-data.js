@@ -11,7 +11,7 @@ const FLOWERS = [
   { id:'hydrangea', letter:'H', name:'Hydrangea', meaning:'Ketulusan Hati', color:'#5DADE2', accent:'#AED6F1', desc:'Terima kasih karena selalu mengerti aku.' },
   { id:'iris', letter:'I', name:'Iris', meaning:'Harapan & Kebijaksanaan', color:'#7D3C98', accent:'#D2B4DE', desc:'Harapanku berlabuh pada tatap matamu.' },
   { id:'jasmine', letter:'J', name:'Jasmine', meaning:'Keanggunan & Sensualitas', color:'#FFFEF7', accent:'#FCF3CF', desc:'Anggun, harum, tak terlupakan seperti dirimu.' },
-  { id:'kalmia', letter:'K', name:'Kalmia', meaning:'Ambisi & Pesona', color:'#EC7063', accent:'#FADBD8', desc:'Ambisi cintaku hanya untuk membahagiakanmu.' },
+  { id:'krokus', letter:'K', name:'Krokus', meaning:'Keceriaan & Harapan Baru', color:'#8E44AD', accent:'#D7BDE2', desc:'Mekar mungil pembawa semangat — bersamamu hariku selalu cerah.' },
   { id:'lily', letter:'L', name:'Lily', meaning:'Kesucian & Kebahagiaan', color:'#FDFEFE', accent:'#FADBD8', desc:'Kau hadirkan kebahagiaan yang suci.' },
   { id:'marigold', letter:'M', name:'Marigold', meaning:'Kehangatan & Kreativitas', color:'#F39C12', accent:'#FDEBD0', desc:'Hangatnya cintamu seperti mentari pagi.' },
   { id:'nelumbo', letter:'N', name:'Nelumbo', meaning:'Pencerahan & Keabadian', color:'#F8BBD0', accent:'#FADBD8', desc:'Lotus cinta yang mekar di atas segala badai.' },
@@ -94,7 +94,7 @@ function _flowerBase(flower, size=100){
   }
 
   // ROSE / CAMELLIA / PEONY-ish ruffled — mawar berlapis + spiral tengah
-  if(['rose','camellia','peony','gardenia','nelumbo','kalmia'].includes(flower.id)){
+  if(['rose','camellia','peony','gardenia','nelumbo'].includes(flower.id)){
     const outer = (flower.id==='peony'||flower.id==='nelumbo') ? 9 : 6;
     const inner = (flower.id==='peony') ? 7 : 5;
     return `${open}${halo}
@@ -120,8 +120,8 @@ function _flowerBase(flower, size=100){
     </svg>`;
   }
 
-  // TULIP / FREESIA — cangkir 3+3
-  if(['tulip','freesia'].includes(flower.id)){
+  // TULIP / FREESIA / KROKUS — cangkir top-view tanpa batang
+  if(['tulip','freesia','krokus','kalmia'].includes(flower.id)){
     return `${open}${halo}
     <g stroke="${stroke}" stroke-width="0.9" stroke-opacity="0.6">
       <path d="M32 78 Q30 45 38 28 Q44 40 46 58 Q48 72 44 80 Z" fill="url(#${gid})"/>
@@ -235,7 +235,7 @@ const PAUWEE_BASE = 'https://assets.pauwee.com/color/flowers';
 const FLOWER_IMG_MAP = {
   amaryllis:'lily', babysbreath:'daisy', camellia:'rose', dahlia:'dahlia',
   echinacea:'anemone', edelweiss:'daisy', freesia:'ranunculus', gardenia:'peony',
-  hydrangea:'peony', iris:'lily', jasmine:'daisy', kalmia:'carnation',
+  hydrangea:'peony', iris:'lily', jasmine:'daisy', kalmia:'anemone', krokus:'anemone',
   lily:'lily', marigold:'zinnia', nelumbo:'peony', orchid:'orchid',
   peony:'peony', queen:'daisy', rose:'rose', sunflower:'sunflower',
   tulip:'tulip', ursinia:'zinnia', violet:'anemone', wisteria:'orchid',
@@ -272,11 +272,19 @@ function _greeneryBaseSVG(type){
   return (typeof _greenerySVGcore === 'function') ? _greenerySVGcore(type) : '';
 }
 const _greenerySVGcore = greenerySVG;
-// PNG saja, tanpa SVG tambahan — 3 lapis beda rotasi biar rimbun & lebih gede dari wrapper
+// PNG saja, tanpa SVG tambahan — eucalyptus dibuat 6 lapis biar rimbun & lebih gede dari wrapper
 greenerySVG = function(type){
   const photo = GREENERY_PHOTO[type] || GREENERY_PHOTO.leafy;
   const mask = '-webkit-mask-image:radial-gradient(circle at 50% 55%, black 60%, transparent 78%);mask-image:radial-gradient(circle at 50% 55%, black 60%, transparent 78%)';
   const img = (tr, op) => `<img class="g-photo" src="${photo}" alt="${type} foliage" loading="lazy" draggable="false" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:${op};transform:${tr};filter:saturate(1.08);${mask}"/>`;
+  if(type === 'eucalyptus'){
+    return img('rotate(-22deg) translateX(-7%) scale(1.1)', '.95')
+      + img('rotate(20deg) translateX(7%) scale(1.12)', '.9')
+      + img('rotate(-8deg) translateY(-4%) scale(1.24)', '.65')
+      + img('rotate(10deg) translateY(3%) scale(1.3)', '.55')
+      + img('rotate(0deg) scale(1.42)', '.4')
+      + img('rotate(-14deg) translateY(6%) scale(1.5)', '.3');
+  }
   return img('rotate(-16deg) scale(1.02)', '.95') + img('rotate(13deg) scale(1.14)', '.6') + img('rotate(0deg) scale(1.26)', '.38');
 };
 // Greenery & Card Styles — Digibouquet-like
@@ -292,6 +300,7 @@ const CARD_STYLES = [
   { id:'blush', name:'Blush', desc:'Romantis' },
   { id:'botanical', name:'Botanical', desc:'Press hijau' },
   { id:'midnight', name:'Midnight', desc:'Editorial mono' },
+  { id:'choco', name:'Choco', desc:'Hangat & manis' },
 ];
 
 // SVG daun rimbun & padat — 2 lapis (belakang gelap + depan terang) biar penuh

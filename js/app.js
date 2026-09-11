@@ -6,7 +6,7 @@
   const LS_KEY = 'blooms-of-love:v3-digibouquet';
   const LS_GARDEN = 'blooms-garden:v1';
   const MAP_FONT = { dancing:'font-dancing', vibes:'font-vibes', playfair:'font-playfair' };
-  const MAP_CARD = { ivory:'card-ivory', parchment:'card-parchment', blush:'card-blush', botanical:'card-botanical', midnight:'card-midnight' };
+  const MAP_CARD = { ivory:'card-ivory', parchment:'card-parchment', blush:'card-blush', botanical:'card-botanical', midnight:'card-midnight', choco:'card-choco' };
   const SAMPLES = [
     `Sayangku,\n\nHari ini aku ingin bilang — kamu adalah alasan aku percaya cinta itu lembut dan kuat di waktu yang sama. Terima kasih sudah sabar, sudah jadi tawa di hariku, dan sudah mengajarkanku arti pulang.\n\nBuket ini kecil, tapi setiap bunganya adalah janji: aku akan menjagamu, merayakan mimpimu, dan mencintaimu tanpa jeda. 🌹\n\nPeluk hangat,\nAku`,
     `Untukmu yang paling aku sayang,\n\nKalau rindu punya warna, warnanya adalah kamu. Kalau cinta punya wangi, wanginya seperti harum bunga yang mekar pagi ini.\n\nAku tak selalu pandai merangkai kata, tapi percayalah — setiap detik aku bersyukur memilikimu. 💐✨\n\nSelamanya,\nAku`,
@@ -17,6 +17,7 @@
     bouquet: [],
     wrapper:'kraft',
     ribbon:'rose',
+    ribbonText:'WITH LOVE',
     greenery:'leafy',
     cardStyle:'ivory',
     mode:'color',
@@ -26,6 +27,40 @@
     step:1,
     garden: []
   };
+  // backward-compat: bunga K lama (kalmia) dipetakan ke krokus agar save/link lama tetap kebuka
+  function flowerById(id){
+    if(!id) return null;
+    let f = (window.FLOWERS||[]).find(x=>x.id===id);
+    if(f) return f;
+    if(id==='kalmia') return (window.FLOWERS||[]).find(x=>x.id==='krokus') || null;
+    return null;
+  }
+  function normalizeBouquet(arr){
+    if(!Array.isArray(arr)) return [];
+    return arr.map(b=>{
+      const nb = {...b};
+      if(nb.flowerId==='kalmia') nb.flowerId='krokus';
+      return nb;
+    });
+  }
+  function ribbonHTML(cls, text, style){
+    const t = (text || state.ribbonText || 'WITH LOVE').toUpperCase().slice(0,24) || 'WITH LOVE';
+    const esc = t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const st = style ? ` style="${style}"` : '';
+    return `<div class="ribbon ${cls}"${st}><span class="ribbon-tails" aria-hidden="true"></span><span class="ribbon-knot" aria-hidden="true"></span><span class="ribbon-text">${esc}</span></div>`;
+  }
+  function setMainRibbon(){
+    if(!el.ribbonEl) return;
+    el.ribbonEl.className = 'ribbon ' + state.ribbon;
+    // jaga struktur fancy (tails + knot + text) — jangan timpa innerHTML biar tidak reset
+    let txt = el.ribbonEl.querySelector('.ribbon-text');
+    if(!txt){
+      el.ribbonEl.innerHTML = '<span class="ribbon-tails" aria-hidden="true"></span><span class="ribbon-knot" aria-hidden="true"></span><span class="ribbon-text"></span>';
+      txt = el.ribbonEl.querySelector('.ribbon-text');
+    }
+    const t = (state.ribbonText || 'WITH LOVE').toUpperCase().slice(0,24) || 'WITH LOVE';
+    txt.textContent = t;
+  }
 
   const el = {
     petalsBg: $('#petalsBg'),
@@ -38,6 +73,7 @@
     bouquetFlowers: $('#bouquetFlowers'),
     wrapperLayer: $('#wrapperLayer'),
     ribbonEl: $('#ribbonEl'),
+    ribbonTextInput: $('#ribbonTextInput'),
     greeneryLayer: $('#greeneryLayer'),
     emptyHint: $('#emptyHint'),
     bouquetList: $('#bouquetList'),
@@ -78,6 +114,7 @@
     el.messageInput.value = state.letter.message || el.messageInput.value;
     if(!state.letter.message) state.letter.message = el.messageInput.value;
     el.senderInput.value = state.letter.sender;
+    if(el.ribbonTextInput) el.ribbonTextInput.value = state.ribbonText || 'WITH LOVE';
     syncFontPills();
     syncCardStyle();
     syncMode();
@@ -115,9 +152,11 @@
       const raw = localStorage.getItem(LS_KEY);
       if(!raw) return;
       const p = JSON.parse(raw);
-      if(Array.isArray(p.bouquet)) state.bouquet = p.bouquet;
+      if(Array.isArray(p.bouquet)) state.bouquet = normalizeBouquet(p.bouquet);
       if(p.wrapper) state.wrapper = p.wrapper;
       if(p.ribbon) state.ribbon = p.ribbon;
+      if(typeof p.ribbonText === 'string' && p.ribbonText.trim()) state.ribbonText = p.ribbonText.slice(0,24);
+      else if(typeof p.r === 'string' && p.r.length > 12) state.ribbonText = p.r.slice(0,24); // fallback format lama
       if(p.greenery) state.greenery = p.greenery;
       if(p.cardStyle) state.cardStyle = p.cardStyle;
       if(p.mode) state.mode = p.mode;
@@ -133,7 +172,11 @@
   function loadGarden(){
     try{
       const raw = localStorage.getItem(LS_GARDEN);
-      if(raw) state.garden = JSON.parse(raw);
+      if(raw){
+        state.garden = JSON.parse(raw);
+        // normalisasi entri lama (kalmia -> krokus)
+        state.garden.forEach(g=>{ if(g && Array.isArray(g.bouquet)) g.bouquet = normalizeBouquet(g.bouquet); });
+      }
     } catch(e){ state.garden=[]; }
   }
   function compressPayload(obj){
@@ -164,7 +207,7 @@
       Math.round(Number(b.rotation))
     ]);
     const payload = compressPayload({
-      b:slimBouquet, w:state.wrapper, r:state.ribbon, g:state.greenery, cs:state.cardStyle, m:state.mode, l:state.letter
+      b:slimBouquet, w:state.wrapper, r:state.ribbon, rt:state.ribbonText, g:state.greenery, cs:state.cardStyle, m:state.mode, l:state.letter
     });
     const url = new URL(location.href.split('?')[0].split('#')[0]);
     url.searchParams.set('gift', payload);
@@ -182,13 +225,21 @@
       if(Array.isArray(data.b)){
         // dukung 2 format: lama (array of object) & baru slim (array of array)
         if(data.b.length && Array.isArray(data.b[0])){
-          state.bouquet = data.b.map((a,i)=>({ uid:String(i+1), flowerId:a[0], x:Number(a[1]), y:Number(a[2]), scale:Number(a[3]), rotation:Number(a[4]) }));
+          state.bouquet = normalizeBouquet(data.b.map((a,i)=>({ uid:String(i+1), flowerId:a[0], x:Number(a[1]), y:Number(a[2]), scale:Number(a[3]), rotation:Number(a[4]) })));
         } else {
-          state.bouquet = data.b;
+          state.bouquet = normalizeBouquet(data.b);
         }
       }
       if(data.w) state.wrapper = data.w;
-      if(data.r) state.ribbon = data.r;
+      if(data.r){
+        // format lama: r = kode ribbon; format sangat lama bisa berisi teks panjang
+        if(typeof data.r === 'string' && data.r.length > 12 && !['rose','gold','burgundy','cream','choco'].includes(data.r)){
+          state.ribbonText = data.r.slice(0,24);
+        } else {
+          state.ribbon = data.r;
+        }
+      }
+      if(typeof data.rt === 'string' && data.rt.trim()) state.ribbonText = data.rt.slice(0,24);
       if(data.g) state.greenery = data.g;
       if(data.cs) state.cardStyle = data.cs;
       if(data.m) state.mode = data.m;
@@ -300,11 +351,11 @@
     el.bouquetCount.textContent = `${n} bunga • ${state.greenery} • ${state.wrapper}`;
     el.emptyHint.classList.toggle('hidden', n>0);
     el.wrapperLayer.className = 'wrapper-layer ' + state.wrapper;
-    el.ribbonEl.className = 'ribbon ' + state.ribbon;
+    setMainRibbon();
     // greenery visibility handled by syncGreenery
     el.bouquetFlowers.innerHTML = '';
     state.bouquet.forEach((item, idx)=>{
-      const f = window.FLOWERS.find(x=>x.id===item.flowerId);
+      const f = flowerById(item.flowerId);
       if(!f) return;
       const d = document.createElement('div');
       d.className = 'bloom';
@@ -326,7 +377,8 @@
       return;
     }
     el.bouquetList.innerHTML = state.bouquet.map(item=>{
-      const f = window.FLOWERS.find(x=>x.id===item.flowerId);
+      const f = flowerById(item.flowerId);
+      if(!f) return '';
       return `
       <div class="bouquet-item" data-uid="${item.uid}">
         <div class="thumb">${window.flowerSVG(f, 26)}</div>
@@ -364,10 +416,11 @@
     }
     el.heroBouquetPreview.innerHTML = `
       <div class="wrapper-layer ${state.wrapper}" style="width:150px;height:150px; bottom:10px; opacity:.95"></div>
-      <div class="ribbon ${state.ribbon}" style="bottom:26px; width:68px; font-size:9px">WITH LOVE</div>
+      ${ribbonHTML(state.ribbon, state.ribbonText, 'bottom:26px; min-width:68px; height:22px; font-size:9px; padding:0 10px')}
       <div style="position:absolute; inset:0">
         ${state.bouquet.slice(0,8).map((item, idx)=>{
-          const f = window.FLOWERS.find(x=>x.id===item.flowerId);
+          const f = flowerById(item.flowerId);
+          if(!f) return '';
           return `<div style="position:absolute; left:${item.x}%; top:${item.y}%; transform:translate(-50%,-50%) rotate(${item.rotation}deg) scale(${Math.min(item.scale,1)*0.62}); z-index:${10+idx}">${window.flowerSVG(f, 64)}</div>`;
         }).join('')}
       </div>
@@ -385,15 +438,16 @@
     el.previewBouquet.innerHTML = `
       <div class="greenery-layer show ${state.greenery}" style="left:50%; top:38%; transform:translate(-50%,-50%); width:370px; height:350px; opacity:1">${_gSVG}</div>
       <div class="wrapper-layer ${state.wrapper}" style="width:230px;height:230px; bottom:22px"></div>
-      <div class="ribbon ${state.ribbon}" style="bottom:62px; width:88px">WITH LOVE</div>
+      ${ribbonHTML(state.ribbon, state.ribbonText, 'bottom:62px; min-width:88px')}
       <div class="bouquet-flowers" style="position:absolute; inset:0">
         ${state.bouquet.map((item, idx)=>{
-          const f = window.FLOWERS.find(x=>x.id===item.flowerId);
+          const f = flowerById(item.flowerId);
+          if(!f) return '';
           return `<div style="position:absolute; left:${item.x}%; top:${item.y}%; transform:translate(-50%,-50%) rotate(${item.rotation}deg) scale(${item.scale}); z-index:${10+idx}; filter:drop-shadow(0 8px 14px rgba(0,0,0,.12))">${window.flowerSVG(f, 84)}</div>`;
         }).join('')}
       </div>`;
-    const names = state.bouquet.map(b=> window.FLOWERS.find(f=>f.id===b.flowerId).name).join(', ');
-    el.previewBouquetMeta.textContent = `${n} bunga • ${names} • ${state.greenery} • ${state.wrapper} • ${state.ribbon} • ${state.mode}`;
+    const names = state.bouquet.map(b=> (flowerById(b.flowerId)||{}).name || b.flowerId).join(', ');
+    el.previewBouquetMeta.textContent = `${n} bunga • ${names} • ${state.greenery} • ${state.wrapper} • ${state.ribbon} “${state.ribbonText}” • ${state.mode}`;
   }
 
   function renderGarden(){
@@ -403,16 +457,17 @@
       return;
     }
     el.gardenGrid.innerHTML = state.garden.map((g, idx)=>{
-      const names = (g.bouquet||[]).slice(0,3).map(b=> (window.FLOWERS.find(f=>f.id===b.flowerId)||{}).name || b.flowerId).join(', ');
+      const names = (g.bouquet||[]).slice(0,3).map(b=> (flowerById(b.flowerId)||{}).name || b.flowerId).join(', ');
+      const gRibbonText = (g.ribbonText || 'WITH LOVE');
       return `
       <div class="garden-card" data-garden="${idx}" role="button" tabindex="0">
         <div class="garden-thumb">
           <div style="position:relative; width:160px; height:140px">
             <div class="wrapper-layer ${g.wrapper||'kraft'}" style="width:120px;height:120px; bottom:6px"></div>
-            <div class="ribbon ${g.ribbon||'rose'}" style="bottom:14px; width:60px; font-size:8px">WITH LOVE</div>
+            ${ribbonHTML(g.ribbon||'rose', gRibbonText, 'bottom:14px; min-width:60px; height:20px; font-size:8px; padding:0 8px')}
             <div style="position:absolute; inset:0">
               ${(g.bouquet||[]).slice(0,6).map((item, i)=>{
-                const f = window.FLOWERS.find(x=>x.id===item.flowerId);
+                const f = flowerById(item.flowerId);
                 if(!f) return '';
                 return `<div style="position:absolute; left:${item.x}%; top:${item.y}%; transform:translate(-50%,-50%) rotate(${item.rotation}deg) scale(${item.scale*0.55})">${window.flowerSVG(f, 52)}</div>`;
               }).join('')}
@@ -440,6 +495,9 @@
     syncMode();
     syncGreenery();
     syncCardStyle();
+    $$('#wrapperChoices .chip').forEach(x=> x.classList.toggle('active', x.dataset.wrapper===state.wrapper));
+    $$('#ribbonChoices .chip').forEach(x=> x.classList.toggle('active', x.dataset.ribbon===state.ribbon));
+    if(el.ribbonTextInput && document.activeElement !== el.ribbonTextInput) el.ribbonTextInput.value = state.ribbonText || 'WITH LOVE';
   }
 
   function addToBouquet(flowerId){
@@ -463,13 +521,15 @@
   }
 
   function enableDrag(node, item){
-    let startX=0,startY=0,origX=0,origY=0,drag=false;
+    let startX=0,startY=0,origX=0,origY=0,drag=false,origZ='';
     const onDown = (e)=>{
       if(e.target.closest('.remove')) return;
       drag=true;
       const pt = e.touches? e.touches[0] : e;
       startX = pt.clientX; startY = pt.clientY;
       origX = item.x; origY = item.y;
+      // simpan z-index asal — jangan pindah ke paling belakang setelah drag
+      origZ = node.style.zIndex || '';
       node.style.zIndex = '99';
       e.preventDefault();
     };
@@ -488,7 +548,9 @@
     };
     const onUp = ()=>{
       if(!drag) return;
-      drag=false; node.style.zIndex='';
+      drag=false;
+      // kembalikan z-index ke posisi semula (tetap di situ, tidak jadi paling belakang)
+      node.style.zIndex = origZ;
       saveToLS();
       renderBouquetList();
       renderPreviewBouquet();
@@ -602,8 +664,19 @@
       if(!b) return;
       state.ribbon = b.dataset.ribbon;
       $$('#ribbonChoices .chip').forEach(x=> x.classList.toggle('active', x.dataset.ribbon===state.ribbon));
-      renderBouquetStage(); renderPreviewBouquet(); saveToLS(); updateShareLink(); playClickSound();
+      renderBouquetStage(); renderPreviewBouquet(); renderHeroPreview(); saveToLS(); updateShareLink(); playClickSound();
     });
+    if(el.ribbonTextInput){
+      el.ribbonTextInput.addEventListener('input', ()=>{
+        state.ribbonText = (el.ribbonTextInput.value || 'WITH LOVE').slice(0,24) || 'WITH LOVE';
+        setMainRibbon(); renderPreviewBouquet(); renderHeroPreview(); saveToLS(); updateShareLink();
+      });
+      el.ribbonTextInput.addEventListener('change', ()=>{
+        if(!el.ribbonTextInput.value.trim()){ el.ribbonTextInput.value = 'WITH LOVE'; state.ribbonText = 'WITH LOVE'; }
+        else state.ribbonText = el.ribbonTextInput.value.slice(0,24);
+        setMainRibbon(); renderPreviewBouquet(); renderHeroPreview(); saveToLS(); updateShareLink();
+      });
+    }
 
     // card styles
     $('#cardStyles').addEventListener('click', (e)=>{
@@ -687,7 +760,7 @@
     $('#btnSave').addEventListener('click', ()=>{ saveToLS(); showToast('Disimpan ke LocalStorage ✅'); playClickSound(); });
     $('#btnSaveGarden').addEventListener('click', ()=>{
       if(state.bouquet.length===0) return showToast('Isi buket dulu 🌷');
-      const entry = { title: `Bouquet ${state.garden.length+1} — ${(state.letter.recipient||'My Mine').slice(0,18)}`, bouquet: JSON.parse(JSON.stringify(state.bouquet)), wrapper: state.wrapper, ribbon: state.ribbon, greenery: state.greenery, cardStyle: state.cardStyle, mode: state.mode, letter: {...state.letter}, date: new Date().toISOString() };
+      const entry = { title: `Bouquet ${state.garden.length+1} — ${(state.letter.recipient||'My Mine').slice(0,18)}`, bouquet: JSON.parse(JSON.stringify(state.bouquet)), wrapper: state.wrapper, ribbon: state.ribbon, ribbonText: state.ribbonText, greenery: state.greenery, cardStyle: state.cardStyle, mode: state.mode, letter: {...state.letter}, date: new Date().toISOString() };
       state.garden.unshift(entry);
       if(state.garden.length>12) state.garden = state.garden.slice(0,12);
       saveGarden(); renderGarden(); showToast('Disimpan ke Garden 🌿'); playClickSound();
@@ -701,9 +774,10 @@
       if(!c) return;
       const g = state.garden[Number(c.dataset.garden)];
       if(!g) return;
-      state.bouquet = JSON.parse(JSON.stringify(g.bouquet||[]));
+      state.bouquet = normalizeBouquet(JSON.parse(JSON.stringify(g.bouquet||[])));
       state.wrapper = g.wrapper||'kraft';
       state.ribbon = g.ribbon||'rose';
+      state.ribbonText = (g.ribbonText||'WITH LOVE').slice(0,24);
       state.greenery = g.greenery||'leafy';
       state.cardStyle = g.cardStyle||'ivory';
       state.mode = g.mode||'color';
@@ -712,6 +786,7 @@
       el.recipientInput.value = state.letter.recipient||'';
       el.messageInput.value = state.letter.message||'';
       el.senderInput.value = state.letter.sender||'';
+      if(el.ribbonTextInput) el.ribbonTextInput.value = state.ribbonText;
       const maxUid = Math.max(0, ...state.bouquet.map(b=> Number(b.uid)||0));
       uidCounter = maxUid + 1;
       saveToLS(); renderAll(); goStep(2); showToast('Bouquet dari Garden dimuat ✨'); playClickSound();
