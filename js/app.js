@@ -1257,11 +1257,14 @@
       saveToLS(); renderAll(); goStep(2); showToast('Bouquet dari Garden dimuat ✨'); playClickSound();
     });
 
-    // — short link: coba 3 provider gratis biar kebal CORS/adblock
+    // — short link: POST dulu (kuat untuk URL raksasa berisi gambar), baru GET
     async function shortenViaIsGd(longUrl){
       try{
-        const api = 'https://is.gd/create.php?format=json&url=' + encodeURIComponent(longUrl);
-        const res = await fetch(api);
+        const res = await fetch('https://is.gd/create.php', {
+          method:'POST',
+          headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+          body:'format=json&url=' + encodeURIComponent(longUrl)
+        });
         if(!res.ok) return null;
         const j = await res.json();
         return j.shorturl || j.shortUrl || null;
@@ -1308,7 +1311,10 @@
         await navigator.clipboard.writeText(toCopy);
         if(el.shareLinkInput) el.shareLinkInput.value = toCopy;
         if(wantShort && shortUrl) showToast('Link pendek disalin! 🔗✨ ' + shortUrl);
-        else if(wantShort && !shortUrl) showToast('Gagal pendek, link panjang disalin 🔗');
+        else if(wantShort && !shortUrl){
+          const hasImg = (state.letter.imgs || []).length > 0;
+          showToast(hasImg ? 'Shortener nolak link besar — link panjang disalin, tetap bisa dibuka 🔗' : 'Gagal pendek, link panjang disalin 🔗');
+        }
         else showToast('Link hadiah disalin! 🔗');
       } catch{
         if(el.shareLinkInput){ el.shareLinkInput.value = toCopy; el.shareLinkInput.select(); document.execCommand('copy'); }
@@ -1378,6 +1384,7 @@
       else {
         // fallback: kalau is.gd diblokir CORS, buka tab is.gd manual biar user bisa copy pendeknya
         console.warn('is.gd gagal, pakai long URL untuk WA');
+        if(longUrl.length > 6000) showToast('Link terlalu panjang untuk WA — coba hapus gambar surat ⚠️');
       }
       const text = `Hai sayang 💌 Aku buatkan buket digital untukmu: ${url}`;
       window.open('https://wa.me/?text='+encodeURIComponent(text), '_blank');
