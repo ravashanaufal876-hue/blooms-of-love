@@ -436,8 +436,9 @@
       return;
     }
     const _gSVG = (window.greenerySVG) ? window.greenerySVG(state.greenery) : '';
+    const _pvSize = state.greenery==='eucalyptus' ? 'width:370px; height:350px;' : 'width:285px; height:270px;';
     el.previewBouquet.innerHTML = `
-      <div class="greenery-layer show ${state.greenery}" style="left:50%; top:38%; transform:translate(-50%,-50%); width:370px; height:350px; opacity:1">${_gSVG}</div>
+      <div class="greenery-layer show ${state.greenery}" style="left:50%; top:38%; transform:translate(-50%,-50%); ${_pvSize} opacity:1">${_gSVG}</div>
       <div class="wrapper-layer ${state.wrapper}" style="width:230px;height:230px; bottom:22px"></div>
       ${ribbonHTML(state.ribbon, state.ribbonText, 'bottom:62px; min-width:88px')}
       <div class="bouquet-flowers" style="position:absolute; inset:0">
