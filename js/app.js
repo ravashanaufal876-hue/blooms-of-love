@@ -22,6 +22,7 @@
     cardStyle:'ivory',
     mode:'color',
     letter:{ recipient:'For My Beloved', message:'', sender:'Dari Aku yang Selalu Mencintaimu', font:'dancing', textX:0, textY:0, imgs:[] },
+    music:null,
     filterLetter:'', search:'',
     envelopeOpen:false,
     step:1,
@@ -125,6 +126,9 @@
     letterImgInput: $('#letterImgInput'),
     letterExpand: $('#letterExpand'),
     expandPaper: $('#expandPaper'),
+    musicInput: $('#musicInput'),
+    musicPlayerMini: $('#musicPlayerMini'),
+    musicPlayerPreview: $('#musicPlayerPreview'),
     envelope: $('#envelope'),
     sealHint: $('#sealHint'),
     previewOverlay: $('#previewOverlay'),
@@ -155,6 +159,7 @@
     if(!state.letter.message) state.letter.message = el.messageInput.value;
     el.senderInput.value = state.letter.sender;
     if(el.ribbonTextInput) el.ribbonTextInput.value = state.ribbonText || 'WITH LOVE';
+    if(el.musicInput) el.musicInput.value = (state.music && state.music.url) || '';
     syncFontPills();
     syncCardStyle();
     syncMode();
@@ -200,6 +205,7 @@
       if(p.greenery) state.greenery = p.greenery;
       if(p.cardStyle) state.cardStyle = p.cardStyle;
       if(p.mode) state.mode = p.mode;
+      if(p.music && p.music.provider) state.music = p.music;
       if(p.letter) state.letter = normalizeLetter(Object.assign({}, state.letter, p.letter));
       if(p.step) state.step = p.step;
       const maxUid = Math.max(0, ...state.bouquet.map(b=> Number(b.uid)||0));
@@ -249,7 +255,7 @@
       Math.round(Number(b.rotation))
     ]);
     const payload = compressPayload({
-      b:slimBouquet, w:state.wrapper, r:state.ribbon, rt:state.ribbonText, g:state.greenery, cs:state.cardStyle, m:state.mode, l:shareLetter(loud)
+      b:slimBouquet, w:state.wrapper, r:state.ribbon, rt:state.ribbonText, g:state.greenery, cs:state.cardStyle, m:state.mode, mu:state.music, l:shareLetter(loud)
     });
     const url = new URL(location.href.split('?')[0].split('#')[0]);
     url.searchParams.set('gift', payload);
@@ -298,6 +304,7 @@
       if(data.g) state.greenery = data.g;
       if(data.cs) state.cardStyle = data.cs;
       if(data.m) state.mode = data.m;
+      if(data.mu && data.mu.provider) state.music = data.mu;
       if(data.l) state.letter = normalizeLetter(Object.assign({}, state.letter, data.l));
       uidCounter = Math.max(1, ...state.bouquet.map(b=> Number(b.uid)||0)) + 1;
       stickerUid = Math.max(1, ...state.letter.imgs.map(s=> Number(String(s.id).replace(/^s/,''))||0)) + 1;
@@ -520,7 +527,7 @@
         }).join('')}
       </div>`;
     const names = state.bouquet.map(b=> (flowerById(b.flowerId)||{}).name || b.flowerId).join(', ');
-    el.previewBouquetMeta.textContent = `${n} bunga • ${names} • ${state.greenery} • ${state.wrapper} • ${state.ribbon} “${state.ribbonText}” • ${state.mode}`;
+    el.previewBouquetMeta.textContent = `${n} bunga • ${names} • ${state.greenery} • ${state.wrapper} • ${state.ribbon} “${state.ribbonText}” • ${state.mode}${state.music ? ' • 🎵' : ''}`;
     syncAllTails(el.previewBouquet);
   }
 
@@ -564,6 +571,7 @@
     renderBouquetStage();
     renderBouquetList();
     renderLetter();
+    renderMusic();
     renderPreviewBouquet();
     renderGarden();
     updateShareLink();
@@ -712,7 +720,7 @@
     $$('.mode-btn').forEach(b=>{
       b.addEventListener('click', ()=>{
         state.mode = b.dataset.mode;
-        syncMode(); saveToLS(); updateShareLink(); renderPreviewBouquet(); renderGarden();
+        syncMode(); saveToLS(); updateShareLink(); renderPreviewBouquet(); renderGarden(); renderMusic();
         showToast(state.mode==='mono' ? 'Mode Mono — editorial 🖤' : state.mode==='dark' ? 'Mode Dark — adem 🌙' : 'Mode Color — warm 🌸');
         playClickSound();
       });
@@ -824,7 +832,94 @@
       saveToLS(); renderLetter(); updateShareLink(); showToast('Posisi teks direset ↺'); playClickSound();
     });
 
-    // --- gambar di surat: upload + downscale ---
+    // --- input lagu ---
+    const onMusicInput = (loud)=>{
+      const parsed = parseMusicUrl(el.musicInput.value);
+      const v = el.musicInput.value.trim();
+      if(!v){ state.music = null; saveToLS(); renderMusic(); updateShareLink(); return; }
+      if(parsed){
+        state.music = parsed;
+        saveToLS(); renderMusic(); updateShareLink();
+        if(loud){ showToast('Lagu dipasang 🎵'); playClickSound(); }
+      } else if(loud){
+        showToast('Link tidak dikenali — pakai Spotify / YouTube / MP3 ⚠️');
+      }
+    };
+    if(el.musicInput){
+      el.musicInput.addEventListener('input', ()=> onMusicInput(false));
+      el.musicInput.addEventListener('change', ()=> onMusicInput(true));
+    }
+    $('#btnClearMusic').addEventListener('click', ()=>{
+      state.music = null;
+      if(el.musicInput) el.musicInput.value = '';
+      saveToLS(); renderMusic(); updateShareLink(); showToast('Lagu dihapus'); playClickSound();
+    });
+
+    // --- lagu hadiah: parse link Spotify / YouTube / file audio ---
+  function parseMusicUrl(raw){
+    const url = String(raw || '').trim();
+    if(!url) return null;
+    let m;
+    m = url.match(/open\.spotify\.com\/(track|album|playlist|episode|show)\/([A-Za-z0-9]+)/i)
+      || url.match(/^spotify:(track|album|playlist|episode|show):([A-Za-z0-9]+)/i);
+    if(m) return { provider:'spotify', subtype:m[1].toLowerCase(), id:m[2], url };
+    m = url.match(/(?:youtube\.com\/(?:watch\?.*v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]+)/i);
+    if(m) return { provider:'youtube', id:m[1], url };
+    if(/\.(mp3|ogg|oga|wav|m4a|aac|flac|opus)(\?|#|$)/i.test(url)) return { provider:'audio', src:url, url };
+    return null;
+  }
+  let _musicKey = null;
+  function musicKey(){
+    const m = state.music;
+    return m ? [m.provider, m.subtype || '', m.id || m.src || '', state.mode].join('|') : 'none:' + state.mode;
+  }
+  function paintMusicPlayer(box, big){
+    if(!box) return;
+    box.innerHTML = '';
+    const m = state.music;
+    if(!m) return;
+    const dark = state.mode === 'dark';
+    const wrap = document.createElement('div');
+    wrap.className = 'music-box';
+    if(m.provider === 'spotify'){
+      const tall = (m.subtype === 'album' || m.subtype === 'playlist' || m.subtype === 'show');
+      const f = document.createElement('iframe');
+      f.src = `https://open.spotify.com/embed/${m.subtype}/${m.id}?utm_source=generator${dark ? '&theme=0' : ''}`;
+      f.height = tall ? '352' : '152';
+      f.setAttribute('frameborder', '0');
+      f.setAttribute('allowfullscreen', '');
+      f.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture');
+      f.loading = 'lazy';
+      f.title = 'Spotify player';
+      wrap.appendChild(f);
+    } else if(m.provider === 'youtube'){
+      const f = document.createElement('iframe');
+      f.src = `https://www.youtube.com/embed/${m.id}?rel=0`;
+      f.height = big ? '220' : '170';
+      f.setAttribute('frameborder', '0');
+      f.setAttribute('allowfullscreen', '');
+      f.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+      f.loading = 'lazy';
+      f.title = 'YouTube player';
+      wrap.appendChild(f);
+    } else if(m.provider === 'audio'){
+      const a = document.createElement('audio');
+      a.controls = true;
+      a.preload = 'none';
+      a.src = m.src;
+      wrap.appendChild(a);
+    } else return;
+    box.appendChild(wrap);
+  }
+  function renderMusic(){
+    const k = musicKey();
+    if(k === _musicKey) return; // jangan rebuild (biar lagu tidak ke-restart)
+    _musicKey = k;
+    paintMusicPlayer(el.musicPlayerMini, false);
+    paintMusicPlayer(el.musicPlayerPreview, true);
+  }
+
+  // --- gambar di surat: upload + downscale ---
     function addLetterImages(files){
       const slots = 3 - (state.letter.imgs||[]).length;
       if(slots <= 0) return showToast('Maksimal 3 gambar di surat 🖼️');
@@ -989,7 +1084,7 @@
     $('#btnSave').addEventListener('click', ()=>{ saveToLS(); showToast('Disimpan ke LocalStorage ✅'); playClickSound(); });
     $('#btnSaveGarden').addEventListener('click', ()=>{
       if(state.bouquet.length===0) return showToast('Isi buket dulu 🌷');
-      const entry = { title: `Bouquet ${state.garden.length+1} — ${(state.letter.recipient||'My Mine').slice(0,18)}`, bouquet: JSON.parse(JSON.stringify(state.bouquet)), wrapper: state.wrapper, ribbon: state.ribbon, ribbonText: state.ribbonText, greenery: state.greenery, cardStyle: state.cardStyle, mode: state.mode, letter: {...state.letter}, date: new Date().toISOString() };
+      const entry = { title: `Bouquet ${state.garden.length+1} — ${(state.letter.recipient||'My Mine').slice(0,18)}`, bouquet: JSON.parse(JSON.stringify(state.bouquet)), wrapper: state.wrapper, ribbon: state.ribbon, ribbonText: state.ribbonText, greenery: state.greenery, cardStyle: state.cardStyle, mode: state.mode, music: state.music ? {...state.music} : null, letter: {...state.letter}, date: new Date().toISOString() };
       state.garden.unshift(entry);
       if(state.garden.length>12) state.garden = state.garden.slice(0,12);
       saveGarden(); renderGarden(); showToast('Disimpan ke Garden 🌿'); playClickSound();
@@ -1010,12 +1105,14 @@
       state.greenery = g.greenery||'leafy';
       state.cardStyle = g.cardStyle||'ivory';
       state.mode = g.mode||'color';
+      state.music = g.music ? {...g.music} : null;
       state.letter = normalizeLetter(Object.assign({textX:0, textY:0, imgs:[]}, g.letter));
       // refresh inputs
       el.recipientInput.value = state.letter.recipient||'';
       el.messageInput.value = state.letter.message||'';
       el.senderInput.value = state.letter.sender||'';
       if(el.ribbonTextInput) el.ribbonTextInput.value = state.ribbonText;
+      if(el.musicInput) el.musicInput.value = (state.music && state.music.url) || '';
       const maxUid = Math.max(0, ...state.bouquet.map(b=> Number(b.uid)||0));
       uidCounter = maxUid + 1;
       saveToLS(); renderAll(); goStep(2); showToast('Bouquet dari Garden dimuat ✨'); playClickSound();

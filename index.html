@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Blooms of Love — Digital Bouquet Studio</title>
   <meta name="description" content="Rangkai digital bouquet ala Digibouquet — pilih bunga A-Z, greenery, kartu & surat, lalu kirim via link. Color & Mono." />
-  <link rel="stylesheet" href="css/style.css?v=20260912j" />
+  <link rel="stylesheet" href="css/style.css?v=20260912k" />
 </head>
 <body>
   <div class="petals-bg" id="petalsBg" aria-hidden="true"></div>
@@ -272,6 +272,15 @@ Selalu milikmu,</textarea>
             </div>
             <p class="muted" style="font-size:11px; margin:6px 0 0">Gambar ikut tersimpan & terkirim via link. Drag teks/gambar di kertas untuk geser, klik kertas untuk memperbesar.</p>
           </div>
+          <div class="field">
+            <label for="musicInput">Lagu untuk Hadiah (opsional)</label>
+            <div style="display:flex; gap:8px; flex-wrap:wrap">
+              <input id="musicInput" type="url" inputmode="url" placeholder="Tempel link Spotify / YouTube / MP3…" style="flex:1 1 200px; width:auto" />
+              <button class="btn btn-ghost btn-small" id="btnClearMusic" type="button">Hapus</button>
+            </div>
+            <p class="muted" style="font-size:11px; margin:6px 0 0">Contoh: link lagu/album/playlist Spotify — bisa di-play langsung di halaman hadiah. 🎵</p>
+            <div id="musicPlayerMini" style="margin-top:8px"></div>
+          </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px">
             <button class="btn btn-ghost btn-small" id="btnClearText" type="button">Kosongkan Teks</button>
             <button class="btn btn-ghost btn-small" id="btnSampleText" type="button">Contoh Pesan Manis</button>
@@ -362,6 +371,7 @@ Selalu milikmu,</textarea>
               <div class="letter-from">Dari: <strong id="previewLetterFrom">—</strong></div>
               <div class="stickers" id="previewStickerLayer"></div>
             </div>
+            <div id="musicPlayerPreview" style="margin-top:12px"></div>
             <div class="share-row">
               <input id="shareLinkInput" readonly placeholder="Link hadiah akan muncul di sini..." />
               <button class="btn btn-ghost btn-small" id="btnCopyLink2" type="button">Salin</button>
@@ -403,6 +413,6 @@ Selalu milikmu,</textarea>
 
   <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
   <script src="js/flowers-data.js?v=20260912c"></script>
-  <script src="js/app.js?v=20260912f"></script>
+  <script src="js/app.js?v=20260912g"></script>
 </body>
 </html>

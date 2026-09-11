@@ -490,6 +490,11 @@ button{font:inherit}
 .expand-shell{max-width:600px; margin:4vh auto}
 .expand-shell .letter-paper{font-size:16px; padding:22px}
 .expand-shell .letter-body{font-size:20px; line-height:1.8}
+/* pemutar lagu hadiah */
+.music-box{border:1px solid var(--line); border-radius:14px; overflow:hidden; background:#FFFEFB}
+body.dark .music-box{background:#241E1A}
+.music-box iframe{display:block; width:100%; border:0}
+.music-box audio{display:block; width:100%; padding:8px; box-sizing:border-box}
 
 /* panel stepper visibility */
 .step-panel{display:none}
@@ -628,5 +633,6 @@ body.dark .letter-paper.card-ivory .letter-to strong, body.dark .letter-paper.ca
   .site-header, .hero, .mode-bar, .stepper, #garden, .panel-actions, .header-actions, .petals-bg, .toast{display:none !important}
   .preview-overlay{display:block !important; position:static; background:white}
   .expand-overlay{display:none !important}
+  .music-box{display:none !important}
   body{filter:none !important}
 }
