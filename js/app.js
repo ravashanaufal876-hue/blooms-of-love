@@ -23,6 +23,7 @@
     mode:'color',
     letter:{ recipient:'For My Beloved', message:'', sender:'Dari Aku yang Selalu Mencintaimu', font:'dancing', textX:0, textY:0, imgs:[] },
     music:null,
+    uploadKey:null,
     filterLetter:'', search:'',
     envelopeOpen:false,
     step:1,
@@ -129,6 +130,7 @@
     musicInput: $('#musicInput'),
     musicPlayerMini: $('#musicPlayerMini'),
     musicPlayerPreview: $('#musicPlayerPreview'),
+    imgbbKeyInput: $('#imgbbKeyInput'),
     giftIntro: $('#giftIntro'),
     giCaption: $('#giCaption'),
     giTo: $('#giTo'),
@@ -216,6 +218,7 @@
       if(p.cardStyle) state.cardStyle = p.cardStyle;
       if(p.mode) state.mode = p.mode;
       if(p.music && p.music.provider) state.music = p.music;
+      if(typeof p.uploadKey === 'string' && p.uploadKey.trim()) state.uploadKey = p.uploadKey.trim();
       if(p.letter) state.letter = normalizeLetter(Object.assign({}, state.letter, p.letter));
       if(p.step) state.step = p.step;
       const maxUid = Math.max(0, ...state.bouquet.map(b=> Number(b.uid)||0));
@@ -255,8 +258,22 @@
     }
     try{ return decodeURIComponent(escape(atob(str))); } catch(e){ return null; }
   }
-  // upload gambar surat ke hosting gratis → link hadiah tetap pendek
+  // upload gambar surat: imgbb (kalau ada key) dulu, baru catbox anonim
   async function uploadLetterImage(dataUrl, name){
+    if(state.uploadKey){
+      try{
+        const fd = new FormData();
+        fd.append('key', state.uploadKey);
+        fd.append('image', (dataUrl.split(',')[1] || dataUrl));
+        fd.append('name', name || 'surat.jpg');
+        const res = await fetchTimeout('https://api.imgbb.com/1/upload', { method:'POST', body:fd }, 30000);
+        if(res.ok){
+          const j = await res.json();
+          const u = j && j.data && (j.data.display_url || j.data.url);
+          if(u && String(u).startsWith('https://')) return u;
+        }
+      } catch(e){ console.warn('imgbb gagal:', e && (e.name || e.message)); }
+    }
     try{
       const blob = await (await fetchTimeout(dataUrl, {}, 15000)).blob();
       const fd = new FormData();
@@ -266,7 +283,7 @@
       if(!res.ok) return null;
       const t = (await res.text()).trim();
       return t.startsWith('https://') ? t : null;
-    } catch(e){ return null; }
+    } catch(e){ console.warn('catbox gagal:', e && (e.name || e.message)); return null; }
   }
   const _rx = (v)=> Math.round(Number(v)*10)/10;
   async function buildShareLink(){
@@ -926,6 +943,15 @@
       el.musicInput.addEventListener('input', ()=> onMusicInput(false));
       el.musicInput.addEventListener('change', ()=> onMusicInput(true));
     }
+    if(el.imgbbKeyInput){
+      el.imgbbKeyInput.value = state.uploadKey || '';
+      el.imgbbKeyInput.addEventListener('change', ()=>{
+        state.uploadKey = el.imgbbKeyInput.value.trim() || null;
+        saveToLS();
+        showToast(state.uploadKey ? 'Key tersimpan ✅' : 'Key dihapus');
+        playClickSound();
+      });
+    }
     $('#btnClearMusic').addEventListener('click', ()=>{
       state.music = null;
       if(el.musicInput) el.musicInput.value = '';
@@ -1394,6 +1420,16 @@
         if(wantShort && shortUrl) showToast('Link pendek disalin! 🔗✨ ' + shortUrl);
         else if(wantShort && !shortUrl){
           const hasImg = (state.letter.imgs || []).length > 0;
+          if(hasImg && confirm('Shortener menolak link bergambar yang besar. Kirim link TANPA gambar? (pendek & pasti bisa dibuka)')){
+            const slim = encodeWithLetter({...shareLetter(false), imgs:[]});
+            const s2 = await shortenUrl(slim);
+            const finalUrl = s2 || slim;
+            try{ await navigator.clipboard.writeText(finalUrl); }catch(e){}
+            if(el.shareLinkInput) el.shareLinkInput.value = finalUrl;
+            showToast(s2 ? 'Link tanpa gambar disalin! 🔗✨' : 'Link tanpa gambar disalin (panjang) 🔗');
+            playClickSound();
+            return finalUrl;
+          }
           showToast(hasImg ? 'Shortener nolak link besar — link panjang disalin, tetap bisa dibuka 🔗' : 'Gagal pendek, link panjang disalin 🔗');
         }
         else showToast('Link hadiah disalin! 🔗');
