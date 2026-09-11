@@ -362,6 +362,13 @@ button{font:inherit}
 .ribbon.choco{background:linear-gradient(135deg, #8B5E3C 0%, #6F4E37 45%, #3E2A1E 100%)}
 .ribbon.choco .ribbon-knot{background:linear-gradient(135deg, #9C6F4B, #3E2A1E)}
 .ribbon-tails.choco::before, .ribbon-tails.choco::after{background:linear-gradient(135deg, #6F4E37, #2E1F14)}
+/* varian inline: ekor di DALAM band — khusus buket beranimasi (gift intro),
+   biar selalu nempel & bergerak bareng pita */
+.ribbon.rose .ribbon-tails::before, .ribbon.rose .ribbon-tails::after{background:linear-gradient(135deg, #2B2B2B, #000)}
+.ribbon.gold .ribbon-tails::before, .ribbon.gold .ribbon-tails::after{background:linear-gradient(135deg, #D4A373, #9C6B32)}
+.ribbon.burgundy .ribbon-tails::before, .ribbon.burgundy .ribbon-tails::after{background:linear-gradient(135deg, #7A1C2E, #3A0B15)}
+.ribbon.cream .ribbon-tails::before, .ribbon.cream .ribbon-tails::after{background:linear-gradient(135deg, #FFF8E7, #E3CFA5)}
+.ribbon.choco .ribbon-tails::before, .ribbon.choco .ribbon-tails::after{background:linear-gradient(135deg, #6F4E37, #2E1F14)}
 .bouquet-flowers{position:absolute; inset:0; pointer-events:none}
 .bloom{
   position:absolute; pointer-events:auto; cursor:grab; user-select:none;

@@ -66,7 +66,14 @@
     const bs = bandStyle ? ` style="${bandStyle}"` : '';
     return `<div class="ribbon-tails ${cls}" aria-hidden="true"></div><div class="ribbon ${cls}"${bs}><span class="ribbon-knot" aria-hidden="true"></span><span class="ribbon-text">${esc}</span></div>`;
   }
-  // Ekor pita layer terpisah di belakang wrapper → geometrinya disamakan ke band via JS
+  // Varian inline (ekor di dalam band): khusus buket BERANIMASI seperti gift intro —
+  // ekor layer-terpisah tidak bisa ngikutin band yang bergerak/berubah transform
+  function ribbonInlineHTML(cls, text, bandStyle){
+    const t = (text || state.ribbonText || 'WITH LOVE').toUpperCase().slice(0,24) || 'WITH LOVE';
+    const esc = t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const bs = bandStyle ? ` style="${bandStyle}"` : '';
+    return `<div class="ribbon ${cls}"${bs}><span class="ribbon-tails" aria-hidden="true"></span><span class="ribbon-knot" aria-hidden="true"></span><span class="ribbon-text">${esc}</span></div>`;
+  }
   function syncTailsBox(tails, band){
     if(!tails || !band || !tails.offsetParent) return;
     const br = band.getBoundingClientRect();
@@ -1221,7 +1228,7 @@
       const items = state.bouquet.slice(0, 10);
       el.giBouquet.innerHTML = `
         <div class="wrapper-layer ${state.wrapper}" style="width:170px;height:170px;bottom:6px"></div>
-        ${ribbonHTML(state.ribbon, state.ribbonText, 'bottom:30px; min-width:76px; height:24px; font-size:9px; padding:0 10px')}
+        ${ribbonInlineHTML(state.ribbon, state.ribbonText, 'bottom:30px; min-width:76px; height:24px; font-size:9px; padding:0 10px')}
         ${items.map((item, idx)=>{
           const f = flowerById(item.flowerId);
           if(!f) return '';
