@@ -204,11 +204,11 @@
           try{ const p = window._openPreview; if(p){ p(); ok = true; errMsg = ''; } }catch(e2){}
         }
         document.documentElement.classList.add('gift-mode');
-        showToast(ok ? 'Hadiah dibuka 💌 — klik ✕ untuk lihat studio' : ('Gagal buka hadiah: ' + errMsg + ' ⚠️'));
+        showToast(ok ? 'Hadiah dibuka 💌 — klik ✕ untuk lihat studio' : ('Gagal buka hadiah: ' + errMsg + ' ⚠️'), 8000);
       }, 450);
     } else if(hasGiftParam){
       // ada ?gift= tapi datanya tidak bisa dibaca (kepotong / kadaluarsa) — kasih tahu, jangan diam-diam buka studio
-      setTimeout(()=> showToast('Link hadiah bermasalah (' + (giftLoadError || 'tidak-terbaca') + ') ⚠️ — minta kirim ulang link-nya'), 800);
+      setTimeout(()=> showToast('Link hadiah bermasalah (' + (giftLoadError || 'tidak-terbaca') + ') ⚠️ — minta kirim ulang link-nya', 8000), 800);
     }
   }
 
@@ -421,11 +421,11 @@
   let giftLoadError = '';
 
   // helpers
-  function showToast(msg){
+  function showToast(msg, ms){
     el.toast.textContent = msg;
     el.toast.classList.add('show');
     clearTimeout(showToast._t);
-    showToast._t = setTimeout(()=> el.toast.classList.remove('show'), 2200);
+    showToast._t = setTimeout(()=> el.toast.classList.remove('show'), ms || 2200);
   }
   function playClickSound(){
     try{
