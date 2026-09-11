@@ -311,8 +311,12 @@ button{font:inherit}
   border:1px dashed rgba(255,235,200,.45); border-radius:12px 12px 30px 30px / 12px 12px 44px 44px;
   pointer-events:none;
 }
-.ribbon{
+.ribbon-wrap{
   position:absolute; bottom:56px; left:50%; transform:translateX(-50%);
+  display:flex; justify-content:center; z-index:auto;
+}
+.ribbon{
+  position:relative;
   min-width:96px; max-width:230px; height:30px; padding:0 18px; border-radius:6px;
   display:flex; align-items:center; justify-content:center;
   font-size:10.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:white;
@@ -347,21 +351,21 @@ button{font:inherit}
 }
 .ribbon.rose{background:linear-gradient(135deg, #2B2B2B, #000)}
 .ribbon.rose .ribbon-knot{background:linear-gradient(135deg, #3A3A3A, #000)}
-.ribbon.rose .ribbon-tails::before, .ribbon.rose .ribbon-tails::after{background:linear-gradient(135deg, #2B2B2B, #000)}
+.ribbon-wrap.rose .ribbon-tails::before, .ribbon-wrap.rose .ribbon-tails::after{background:linear-gradient(135deg, #2B2B2B, #000)}
 .ribbon.gold{background:linear-gradient(135deg, #E8B96B, #B88955)}
 .ribbon.gold .ribbon-knot{background:linear-gradient(135deg, #F0C87E, #A8783E)}
-.ribbon.gold .ribbon-tails::before, .ribbon.gold .ribbon-tails::after{background:linear-gradient(135deg, #D4A373, #9C6B32)}
+.ribbon-wrap.gold .ribbon-tails::before, .ribbon-wrap.gold .ribbon-tails::after{background:linear-gradient(135deg, #D4A373, #9C6B32)}
 .ribbon.burgundy{background:linear-gradient(135deg, #96243A, #4A0F1B)}
 .ribbon.burgundy .ribbon-knot{background:linear-gradient(135deg, #A92E46, #3A0B15)}
-.ribbon.burgundy .ribbon-tails::before, .ribbon.burgundy .ribbon-tails::after{background:linear-gradient(135deg, #7A1C2E, #3A0B15)}
+.ribbon-wrap.burgundy .ribbon-tails::before, .ribbon-wrap.burgundy .ribbon-tails::after{background:linear-gradient(135deg, #7A1C2E, #3A0B15)}
 .ribbon.cream{background:linear-gradient(135deg, #FFFFFF, #F3E6C8); color:var(--ink); border:1px solid var(--line-strong)}
 .ribbon.cream::before{border-color:rgba(111,78,55,.4)}
 .ribbon.cream .ribbon-text{text-shadow:none}
 .ribbon.cream .ribbon-knot{background:linear-gradient(135deg, #FFFFFF, #E8D5B0); border-color:#D9C49A}
-.ribbon.cream .ribbon-tails::before, .ribbon.cream .ribbon-tails::after{background:linear-gradient(135deg, #FFF8E7, #E3CFA5)}
+.ribbon-wrap.cream .ribbon-tails::before, .ribbon-wrap.cream .ribbon-tails::after{background:linear-gradient(135deg, #FFF8E7, #E3CFA5)}
 .ribbon.choco{background:linear-gradient(135deg, #8B5E3C 0%, #6F4E37 45%, #3E2A1E 100%)}
 .ribbon.choco .ribbon-knot{background:linear-gradient(135deg, #9C6F4B, #3E2A1E)}
-.ribbon.choco .ribbon-tails::before, .ribbon.choco .ribbon-tails::after{background:linear-gradient(135deg, #6F4E37, #2E1F14)}
+.ribbon-wrap.choco .ribbon-tails::before, .ribbon-wrap.choco .ribbon-tails::after{background:linear-gradient(135deg, #6F4E37, #2E1F14)}
 .bouquet-flowers{position:absolute; inset:0; pointer-events:none}
 .bloom{
   position:absolute; pointer-events:auto; cursor:grab; user-select:none;

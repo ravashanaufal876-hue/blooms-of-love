@@ -43,19 +43,21 @@
       return nb;
     });
   }
-  function ribbonHTML(cls, text, style){
+  function ribbonHTML(cls, text, wrapStyle, bandStyle){
     const t = (text || state.ribbonText || 'WITH LOVE').toUpperCase().slice(0,24) || 'WITH LOVE';
     const esc = t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const st = style ? ` style="${style}"` : '';
-    return `<div class="ribbon ${cls}"${st}><span class="ribbon-tails" aria-hidden="true"></span><span class="ribbon-knot" aria-hidden="true"></span><span class="ribbon-text">${esc}</span></div>`;
+    const ws = wrapStyle ? ` style="${wrapStyle}"` : '';
+    const bs = bandStyle ? ` style="${bandStyle}"` : '';
+    return `<div class="ribbon-wrap ${cls}"${ws}><span class="ribbon-tails" aria-hidden="true"></span><div class="ribbon ${cls}"${bs}><span class="ribbon-knot" aria-hidden="true"></span><span class="ribbon-text">${esc}</span></div></div>`;
   }
   function setMainRibbon(){
     if(!el.ribbonEl) return;
     el.ribbonEl.className = 'ribbon ' + state.ribbon;
-    // jaga struktur fancy (tails + knot + text) — jangan timpa innerHTML biar tidak reset
+    if(el.ribbonWrap) el.ribbonWrap.className = 'ribbon-wrap ' + state.ribbon;
+    // jaga struktur fancy (tails di wrap + knot + text) — jangan timpa innerHTML biar tidak reset
     let txt = el.ribbonEl.querySelector('.ribbon-text');
     if(!txt){
-      el.ribbonEl.innerHTML = '<span class="ribbon-tails" aria-hidden="true"></span><span class="ribbon-knot" aria-hidden="true"></span><span class="ribbon-text"></span>';
+      el.ribbonEl.innerHTML = '<span class="ribbon-knot" aria-hidden="true"></span><span class="ribbon-text"></span>';
       txt = el.ribbonEl.querySelector('.ribbon-text');
     }
     const t = (state.ribbonText || 'WITH LOVE').toUpperCase().slice(0,24) || 'WITH LOVE';
@@ -73,6 +75,7 @@
     bouquetFlowers: $('#bouquetFlowers'),
     wrapperLayer: $('#wrapperLayer'),
     ribbonEl: $('#ribbonEl'),
+    ribbonWrap: $('#ribbonWrap'),
     ribbonTextInput: $('#ribbonTextInput'),
     greeneryLayer: $('#greeneryLayer'),
     emptyHint: $('#emptyHint'),
@@ -417,7 +420,7 @@
     }
     el.heroBouquetPreview.innerHTML = `
       <div class="wrapper-layer ${state.wrapper}" style="width:150px;height:150px; bottom:10px; opacity:.95"></div>
-      ${ribbonHTML(state.ribbon, state.ribbonText, 'bottom:26px; min-width:68px; height:22px; font-size:9px; padding:0 10px')}
+      ${ribbonHTML(state.ribbon, state.ribbonText, 'bottom:26px', 'min-width:68px; height:22px; font-size:9px; padding:0 10px')}
       <div style="position:absolute; inset:0">
         ${state.bouquet.slice(0,8).map((item, idx)=>{
           const f = flowerById(item.flowerId);
@@ -440,7 +443,7 @@
     el.previewBouquet.innerHTML = `
       <div class="greenery-layer show ${state.greenery}" style="left:50%; top:38%; transform:translate(-50%,-50%); ${_pvSize} opacity:1">${_gSVG}</div>
       <div class="wrapper-layer ${state.wrapper}" style="width:230px;height:230px; bottom:22px"></div>
-      ${ribbonHTML(state.ribbon, state.ribbonText, 'bottom:62px; min-width:88px')}
+      ${ribbonHTML(state.ribbon, state.ribbonText, 'bottom:62px', 'min-width:88px')}
       <div class="bouquet-flowers" style="position:absolute; inset:0">
         ${state.bouquet.map((item, idx)=>{
           const f = flowerById(item.flowerId);
@@ -466,7 +469,7 @@
         <div class="garden-thumb">
           <div style="position:relative; width:160px; height:140px">
             <div class="wrapper-layer ${g.wrapper||'kraft'}" style="width:120px;height:120px; bottom:6px"></div>
-            ${ribbonHTML(g.ribbon||'rose', gRibbonText, 'bottom:14px; min-width:60px; height:20px; font-size:8px; padding:0 8px')}
+            ${ribbonHTML(g.ribbon||'rose', gRibbonText, 'bottom:14px', 'min-width:60px; height:20px; font-size:8px; padding:0 8px')}
             <div style="position:absolute; inset:0">
               ${(g.bouquet||[]).slice(0,6).map((item, i)=>{
                 const f = flowerById(item.flowerId);
