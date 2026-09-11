@@ -597,7 +597,9 @@ body.dark .music-box{background:#241E1A}
 /* mode hadiah (link dibuka penerima): sembunyikan perabot share, studio tetap lengkap */
 html.gift-mode .share-row,
 html.gift-mode #imgbbRow,
-html.gift-mode #imgbbHint{display:none !important}
+html.gift-mode #imgbbHint,
+html.gift-mode #shareCtaCard,
+html.gift-mode #previewTopActions{display:none !important}
 .gift-diag button{margin-left:8px; border:1px solid currentColor; background:transparent; color:inherit; border-radius:999px; width:22px; height:22px; font-size:11px; cursor:pointer; line-height:1}
 
 /* ============ DARK MODE — adem di mata 🌙 ============ */
