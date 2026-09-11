@@ -1243,6 +1243,7 @@
       }
     }
     function openGiftIntro(){
+      ensureGiftIntroDOM();
       if(!el.giftIntro || !el.giBouquet || !el.giLetterWrap || !el.giEnvelope || !el.giTo || !el.giCaption || !el.giHint){
         throw new Error('komponen intro tidak ketemu (HTML lama? hard-refresh Ctrl+Shift+R)');
       }
@@ -1287,6 +1288,53 @@
       else if(!document.querySelector('.preview-overlay.open')) document.body.style.overflow = '';
     }
     window._openGiftIntro = openGiftIntro;
+    // Bulletproof: kalau HTML yang ke-load basi (tanpa blok intro), bangun DOM intro dari JS
+    function ensureGiftIntroDOM(){
+      const ok = $('#giftIntro') && $('#giBouquet') && $('#giEnvelope') && $('#btnGiOpen') && $('#giLetterWrap');
+      el.giftIntro = $('#giftIntro'); el.giCaption = $('#giCaption'); el.giTo = $('#giTo');
+      el.giBouquet = $('#giBouquet'); el.giPetals = $('#giPetals'); el.giStars = $('#giStars');
+      el.giLetterWrap = $('#giLetterWrap'); el.giHint = $('#giHint'); el.giEnvelope = $('#giEnvelope');
+      el.giLetter = $('#giLetter');
+      if(ok) return;
+      const old = $('#giftIntro');
+      if(old && old.parentElement) old.parentElement.removeChild(old);
+      const d = document.createElement('div');
+      d.innerHTML = `
+      <div class="gift-intro" id="giftIntro" aria-hidden="true">
+        <div class="gi-petals" id="giPetals"></div>
+        <div class="gi-stars" id="giStars"></div>
+        <button class="btn btn-ghost btn-small gi-skip" id="btnGiSkip" type="button">Lewati →</button>
+        <div class="gi-stage">
+          <div class="gi-caption" id="giCaption">💌 Kamu dapat hadiah…</div>
+          <div class="gi-to" id="giTo">Hadiah untukmu 🌸</div>
+          <div class="gi-bouquet" id="giBouquet"></div>
+          <div class="gi-letter-wrap" id="giLetterWrap">
+            <div class="gi-hint" id="giHint">Siapkan hatimu… ✨</div>
+            <div class="envelope gi-envelope" id="giEnvelope" role="button" tabindex="0" aria-label="Buka surat">
+              <div class="envelope-body"></div>
+              <div class="flap"></div>
+              <div class="seal">❤</div>
+            </div>
+            <div class="letter-paper static gi-letter" id="giLetter"></div>
+            <button class="btn btn-primary" id="btnGiOpen" type="button" style="display:none">💐 Lihat Buket Lengkap</button>
+          </div>
+        </div>
+      </div>`;
+      document.body.appendChild(d.firstElementChild);
+      el.giftIntro = $('#giftIntro'); el.giCaption = $('#giCaption'); el.giTo = $('#giTo');
+      el.giBouquet = $('#giBouquet'); el.giPetals = $('#giPetals'); el.giStars = $('#giStars');
+      el.giLetterWrap = $('#giLetterWrap'); el.giHint = $('#giHint'); el.giEnvelope = $('#giEnvelope');
+      el.giLetter = $('#giLetter');
+      const sk = $('#btnGiSkip');
+      if(sk) sk.addEventListener('click', ()=> closeGiftIntro(true));
+      const op = $('#btnGiOpen');
+      if(op) op.addEventListener('click', ()=> closeGiftIntro(true));
+      const ge = $('#giEnvelope');
+      if(ge){
+        ge.addEventListener('click', openGiLetter);
+        ge.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openGiLetter(); } });
+      }
+    }
     function openGiLetter(){
       if(!el.giEnvelope || el.giEnvelope.classList.contains('open')) return;
       el.giEnvelope.classList.add('open');
@@ -1317,11 +1365,14 @@
         if(Math.abs(e.clientX - dx) + Math.abs(e.clientY - dy) < 8) openExpand();
       });
     });
-    $('#btnCloseExpand').addEventListener('click', closeExpand);
+    const _btnCloseExpand = $('#btnCloseExpand');
+    if(_btnCloseExpand) _btnCloseExpand.addEventListener('click', closeExpand);
     el.letterExpand.addEventListener('click', (e)=>{ if(e.target === el.letterExpand) closeExpand(); });
-    // gift intro controls
-    $('#btnGiSkip').addEventListener('click', ()=> closeGiftIntro(true));
-    $('#btnGiOpen').addEventListener('click', ()=> closeGiftIntro(true));
+    // gift intro controls (guard: HTML basi tidak boleh mematikan binding lain)
+    const _giSkip = $('#btnGiSkip');
+    if(_giSkip) _giSkip.addEventListener('click', ()=> closeGiftIntro(true));
+    const _giOpen = $('#btnGiOpen');
+    if(_giOpen) _giOpen.addEventListener('click', ()=> closeGiftIntro(true));
     if(el.giEnvelope){
       el.giEnvelope.addEventListener('click', openGiLetter);
       el.giEnvelope.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openGiLetter(); } });
