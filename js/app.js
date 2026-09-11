@@ -162,6 +162,7 @@
 
   function init(){
     const fromURL = loadFromURL();
+    const hasGiftParam = new URLSearchParams(location.search).has('gift');
     if(!fromURL) loadFromLS();
     else showToast('Hadiah dibuka dari link 💌');
     loadGarden();
@@ -197,6 +198,9 @@
         document.documentElement.classList.add('gift-mode');
         showToast('Hadiah dibuka 💌 — klik ✕ untuk lihat studio');
       }, 450);
+    } else if(hasGiftParam){
+      // ada ?gift= tapi datanya tidak bisa dibaca (kepotong / kadaluarsa) — kasih tahu, jangan diam-diam buka studio
+      setTimeout(()=> showToast('Link hadiah rusak/kepotong ⚠️ — minta kirim ulang link-nya'), 800);
     }
   }
 
@@ -242,10 +246,8 @@
   }
   function compressPayload(obj){
     const json = JSON.stringify(obj);
-    // pakai LZ-String kalau ada (hasil ~40% lebih pendek dari base64 biasa)
-    if(window.LZString && window.LZString.compressToEncodedURIComponent){
-      return 'lz:' + window.LZString.compressToEncodedURIComponent(json);
-    }
+    // base64 biasa saja (tanpa LZ-String): decode selalu bisa tanpa CDN,
+    // biar link lawas/baru tetap kebuka di browser apapun
     return btoa(unescape(encodeURIComponent(json)));
   }
   function decompressPayload(str){
@@ -1445,6 +1447,11 @@
     $('#btnShare').addEventListener('click', ()=> copyLink(null, {short:true}));
     $('#btnCopyPreview').addEventListener('click', ()=> copyLink(null, {short:true}));
     $('#btnCopyLink2').addEventListener('click', ()=> copyLink(null, {short:false}));
+    $('#btnTestLink').addEventListener('click', async ()=>{
+      showToast('Membuka link hadiah di tab baru… 👁️');
+      const l = await buildShareLink();
+      window.open(l, '_blank');
+    });
     // tombol extra “Perpendek” kalau user mau manual
     const btnShort = document.createElement('button');
     btnShort.type='button'; btnShort.className='btn btn-ghost btn-small'; btnShort.id='btnShortLink';
