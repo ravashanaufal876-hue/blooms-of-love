@@ -258,11 +258,11 @@
   // upload gambar surat ke hosting gratis → link hadiah tetap pendek
   async function uploadLetterImage(dataUrl, name){
     try{
-      const blob = await (await fetch(dataUrl)).blob();
+      const blob = await (await fetchTimeout(dataUrl, {}, 15000)).blob();
       const fd = new FormData();
       fd.append('reqtype', 'fileupload');
       fd.append('fileToUpload', new File([blob], name || 'surat.jpg', { type:'image/jpeg' }));
-      const res = await fetch('https://catbox.moe/user/api.php', { method:'POST', body:fd });
+      const res = await fetchTimeout('https://catbox.moe/user/api.php', { method:'POST', body:fd }, 30000);
       if(!res.ok) return null;
       const t = (await res.text()).trim();
       return t.startsWith('https://') ? t : null;
@@ -912,7 +912,17 @@
       saveToLS(); renderMusic(); updateShareLink(); showToast('Lagu dihapus'); playClickSound();
     });
 
-    // --- lagu hadiah: parse link Spotify / YouTube / file audio ---
+    // --- network anti-hang: semua fetch pakai timeout ---
+  function fetchTimeout(url, opts, ms){
+    const c = (window.AbortController) ? new AbortController() : null;
+    const t = setTimeout(()=>{ try{ c && c.abort(); }catch(e){} }, ms || 12000);
+    const p = fetch(url, c ? {...(opts || {}), signal:c.signal} : (opts || {}));
+    return p.then(
+      (r)=>{ clearTimeout(t); return r; },
+      (e)=>{ clearTimeout(t); throw e; }
+    );
+  }
+  // --- lagu hadiah: parse link Spotify / YouTube / file audio ---
   function parseMusicUrl(raw){
     const url = String(raw || '').trim();
     if(!url) return null;
@@ -1304,14 +1314,14 @@
       saveToLS(); renderAll(); goStep(2); showToast('Bouquet dari Garden dimuat ✨'); playClickSound();
     });
 
-    // — short link: POST dulu (kuat untuk URL raksasa berisi gambar), baru GET
+    // — short link: 3 provider jalan PARALEL + timeout (yang sukses duluan menang)
     async function shortenViaIsGd(longUrl){
       try{
-        const res = await fetch('https://is.gd/create.php', {
+        const res = await fetchTimeout('https://is.gd/create.php', {
           method:'POST',
           headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
           body:'format=json&url=' + encodeURIComponent(longUrl)
-        });
+        }, 10000);
         if(!res.ok) return null;
         const j = await res.json();
         return j.shorturl || j.shortUrl || null;
@@ -1320,7 +1330,7 @@
     async function shortenViaTinyUrl(longUrl){
       try{
         const api = 'https://tinyurl.com/api-create.php?url=' + encodeURIComponent(longUrl);
-        const res = await fetch(api);
+        const res = await fetchTimeout(api, {}, 10000);
         if(!res.ok) return null;
         const t = (await res.text()).trim();
         return (t.startsWith('http')) ? t : null;
@@ -1328,23 +1338,27 @@
     }
     async function shortenViaCleanUri(longUrl){
       try{
-        const res = await fetch('https://cleanuri.com/api/v1/shorten', {
+        const res = await fetchTimeout('https://cleanuri.com/api/v1/shorten', {
           method:'POST',
           headers:{'Content-Type':'application/x-www-form-urlencoded'},
           body:'url=' + encodeURIComponent(longUrl)
-        });
+        }, 10000);
         if(!res.ok) return null;
         const j = await res.json();
         return j.result_url || null;
       } catch(e){ return null; }
     }
     async function shortenUrl(longUrl){
-      return (await shortenViaIsGd(longUrl))
-        || (await shortenViaTinyUrl(longUrl))
-        || (await shortenViaCleanUri(longUrl))
-        || null;
+      try{
+        return await Promise.any([
+          shortenViaIsGd(longUrl),
+          shortenViaTinyUrl(longUrl),
+          shortenViaCleanUri(longUrl)
+        ].map(p=> p.then(r=>{ if(!r) throw new Error('miss'); return r; })));
+      } catch(e){ return null; }
     }
     const copyLink = async (link, opts={})=>{
+      showToast('Menyiapkan link… ⏳');
       const l = link || await buildShareLink();
       const wantShort = opts.short === true;
       let toCopy = l;
