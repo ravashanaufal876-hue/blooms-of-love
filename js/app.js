@@ -129,6 +129,16 @@
     musicInput: $('#musicInput'),
     musicPlayerMini: $('#musicPlayerMini'),
     musicPlayerPreview: $('#musicPlayerPreview'),
+    giftIntro: $('#giftIntro'),
+    giCaption: $('#giCaption'),
+    giTo: $('#giTo'),
+    giBouquet: $('#giBouquet'),
+    giPetals: $('#giPetals'),
+    giStars: $('#giStars'),
+    giLetterWrap: $('#giLetterWrap'),
+    giHint: $('#giHint'),
+    giEnvelope: $('#giEnvelope'),
+    giLetter: $('#giLetter'),
     envelope: $('#envelope'),
     sealHint: $('#sealHint'),
     previewOverlay: $('#previewOverlay'),
@@ -172,15 +182,15 @@
     goStep(state.step || 1);
     spawnAmbientPetals();
     renderHeroPreview();
-    // Jika dibuka via link share (?gift=), langsung tampilkan mode hadiah ala Digibouquet — biar pacar tidak lihat editor
+    // Jika dibuka via link share (?gift=), mainkan opening sinematik dulu — biar pacar tidak lihat editor
     if(fromURL){
-      // delay sedikit biar DOM siap, lalu auto-buka preview + sembunyikan hero/stepper untuk kesan hadiah bersih
+      // delay sedikit biar DOM siap, lalu mainkan intro gift
       setTimeout(()=>{
-        const openPreview = window._openPreview || null;
-        if(openPreview) openPreview();
+        const openIntro = window._openGiftIntro || null;
+        if(openIntro) openIntro();
         else {
-          const ov = document.getElementById('previewOverlay');
-          if(ov){ ov.classList.add('open'); ov.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden'; }
+          const openPreview = window._openPreview || null;
+          if(openPreview) openPreview();
         }
         document.documentElement.classList.add('gift-mode');
         showToast('Hadiah dibuka 💌 — klik ✕ untuk lihat studio');
@@ -1055,6 +1065,128 @@
       playClickSound();
     }
     window._openExpand = openExpand;
+    // --- GIFT INTRO sinematik (khusus dibuka via link) ---
+    let _giTimers = [];
+    function giLater(fn, ms){ _giTimers.push(setTimeout(fn, ms)); }
+    function giClearTimers(){ _giTimers.forEach(clearTimeout); _giTimers = []; }
+    function renderGiftIntroBouquet(){
+      if(!el.giBouquet) return;
+      const items = state.bouquet.slice(0, 10);
+      el.giBouquet.innerHTML = `
+        <div class="wrapper-layer ${state.wrapper}" style="width:170px;height:170px;bottom:6px"></div>
+        ${ribbonHTML(state.ribbon, state.ribbonText, 'bottom:30px; min-width:76px; height:24px; font-size:9px; padding:0 10px')}
+        ${items.map((item, idx)=>{
+          const f = flowerById(item.flowerId);
+          if(!f) return '';
+          return `<div class="gi-bloom" style="left:${item.x}%; top:${item.y}%; animation-delay:${0.25 + idx * 0.13}s; z-index:${10 + idx}"><div style="transform:rotate(${item.rotation}deg) scale(${item.scale * 0.8})">${window.flowerSVG(f, 72)}</div></div>`;
+        }).join('')}`;
+      syncAllTails(el.giBouquet);
+    }
+    function giPetals(n){
+      if(!el.giPetals) return;
+      el.giPetals.innerHTML = '';
+      const colors = ['#E88D9C', '#F4B5C2', '#F8BBD0', '#E8C98F', '#F5EFE8'];
+      for(let i = 0; i < (n || 14); i++){
+        const p = document.createElement('div');
+        p.className = 'petal';
+        const size = 9 + Math.random() * 11;
+        p.style.left = (Math.random() * 100) + '%';
+        p.style.animationDuration = (3 + Math.random() * 2.6) + 's';
+        p.style.animationDelay = (Math.random() * 1.4) + 's';
+        p.style.width = size + 'px'; p.style.height = (size * 1.25) + 'px';
+        p.style.background = colors[Math.floor(Math.random() * colors.length)];
+        p.style.opacity = String(0.5 + Math.random() * 0.4);
+        el.giPetals.appendChild(p);
+        setTimeout(()=> p.remove(), 7000);
+      }
+    }
+    function giStars(){
+      if(!el.giStars) return;
+      el.giStars.innerHTML = '';
+      for(let i = 0; i < 26; i++){
+        const s = document.createElement('span');
+        s.className = 'gi-star';
+        s.style.left = (Math.random() * 100) + '%';
+        s.style.top = (Math.random() * 70) + '%';
+        s.style.animationDelay = (Math.random() * 2.4) + 's';
+        const sz = 2 + Math.random() * 3;
+        s.style.width = sz + 'px'; s.style.height = sz + 'px';
+        el.giStars.appendChild(s);
+      }
+    }
+    function giSparkles(n){
+      if(!el.giBouquet) return;
+      for(let i = 0; i < (n || 10); i++){
+        const s = document.createElement('div');
+        s.className = 'sparkle';
+        s.style.left = (20 + Math.random() * 60) + '%';
+        s.style.top = (15 + Math.random() * 50) + '%';
+        s.style.width = '8px'; s.style.height = '8px';
+        el.giBouquet.appendChild(s);
+        setTimeout(()=> s.remove(), 1700);
+      }
+    }
+    function openGiftIntro(){
+      if(!el.giftIntro) { if(window._openPreview) window._openPreview(); return; }
+      renderGiftIntroBouquet();
+      giClearTimers();
+      el.giBouquet.classList.remove('lifted', 'floating');
+      el.giLetterWrap.classList.remove('show');
+      el.giEnvelope.classList.remove('open');
+      el.giLetter.className = 'letter-paper static gi-letter';
+      el.giLetter.innerHTML = '';
+      const btn = $('#btnGiOpen');
+      if(btn) btn.style.display = 'none';
+      const to = (state.letter.recipient || 'Beloved').replace(/^For\s+/i, '');
+      el.giTo.textContent = `Hadiah untukmu, ${to} 🌸`;
+      el.giCaption.textContent = '💌 Kamu dapat hadiah…';
+      el.giHint.textContent = 'Siapkan hatimu… ✨';
+      el.giftIntro.classList.add('open');
+      el.giftIntro.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      giStars(); giPetals(16);
+      giLater(()=> giSparkles(10), 900);
+      giLater(()=> { el.giBouquet.classList.add('floating'); }, 1100);
+      giLater(()=> {
+        el.giCaption.textContent = `Dibuat khusus untuk ${to} ✨`;
+        el.giBouquet.classList.remove('floating');
+        el.giBouquet.classList.add('lifted');
+        giSparkles(8);
+      }, 2300);
+      giLater(()=> {
+        el.giLetterWrap.classList.add('show');
+        el.giHint.textContent = 'Ketuk segel untuk membuka surat 💌';
+        giPetals(8);
+      }, 3200);
+      playClickSound();
+    }
+    function closeGiftIntro(toPreview){
+      giClearTimers();
+      el.giftIntro.classList.remove('open');
+      el.giftIntro.setAttribute('aria-hidden', 'true');
+      if(toPreview && window._openPreview) window._openPreview();
+      else if(!document.querySelector('.preview-overlay.open')) document.body.style.overflow = '';
+    }
+    window._openGiftIntro = openGiftIntro;
+    function openGiLetter(){
+      if(!el.giEnvelope || el.giEnvelope.classList.contains('open')) return;
+      el.giEnvelope.classList.add('open');
+      playClickSound(); giPetals(12); giSparkles(10);
+      setTimeout(()=>{
+        const L = state.letter;
+        const cls = MAP_CARD[state.cardStyle] || 'card-ivory';
+        const fcls = MAP_FONT[L.font] || 'font-dancing';
+        el.giLetter.className = 'letter-paper static gi-letter show ' + cls;
+        el.giLetter.innerHTML = `
+          <div class="letter-to">Untuk: <strong>${escHtml(L.recipient || '—')}</strong></div>
+          <div class="letter-body ${fcls}" style="transform:translate(${Number(L.textX) || 0}px, ${Number(L.textY) || 0}px)">${escHtml(L.message || '—')}</div>
+          <div class="letter-from">Dari: <strong>${escHtml(L.sender || '—')}</strong></div>
+          <div class="stickers">${(L.imgs || []).map(x=>`<div class="sticker" style="left:${Number(x.x) || 0}%; top:${Number(x.y) || 0}%; width:${Number(x.w) || 34}%"><img src="${x.src}" alt="gambar surat"/></div>`).join('')}</div>`;
+        el.giHint.textContent = 'Dibuka dengan cinta 💌';
+        const btn = $('#btnGiOpen');
+        if(btn){ btn.style.display = ''; btn.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+      }, 650);
+    }
     // tap (tanpa geser) di kertas preview → perbesar
     [['#previewLetterPaper'], ['#letterPaper']].forEach(([sel])=>{
       const paper = $(sel);
@@ -1068,6 +1200,13 @@
     });
     $('#btnCloseExpand').addEventListener('click', closeExpand);
     el.letterExpand.addEventListener('click', (e)=>{ if(e.target === el.letterExpand) closeExpand(); });
+    // gift intro controls
+    $('#btnGiSkip').addEventListener('click', ()=> closeGiftIntro(true));
+    $('#btnGiOpen').addEventListener('click', ()=> closeGiftIntro(true));
+    if(el.giEnvelope){
+      el.giEnvelope.addEventListener('click', openGiLetter);
+      el.giEnvelope.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openGiLetter(); } });
+    }
 
     // envelope
     const toggleEnvelope = ()=>{
@@ -1221,6 +1360,7 @@
     el.previewOverlay.addEventListener('click', (e)=>{ if(e.target===el.previewOverlay) closePreview(); });
     document.addEventListener('keydown', (e)=>{
       if(e.key !== 'Escape') return;
+      if(el.giftIntro.classList.contains('open')){ closeGiftIntro(true); return; }
       if(el.letterExpand.classList.contains('open')){ closeExpand(); return; }
       if(el.previewOverlay.classList.contains('open')) closePreview();
     });

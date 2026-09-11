@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Blooms of Love — Digital Bouquet Studio</title>
   <meta name="description" content="Rangkai digital bouquet ala Digibouquet — pilih bunga A-Z, greenery, kartu & surat, lalu kirim via link. Color & Mono." />
-  <link rel="stylesheet" href="css/style.css?v=20260912k" />
+  <link rel="stylesheet" href="css/style.css?v=20260912l" />
 </head>
 <body>
   <div class="petals-bg" id="petalsBg" aria-hidden="true"></div>
@@ -339,6 +339,28 @@ Selalu milikmu,</textarea>
     </div>
   </div>
 
+  <!-- GIFT INTRO — opening sinematik untuk penerima link -->
+  <div class="gift-intro" id="giftIntro" aria-hidden="true">
+    <div class="gi-petals" id="giPetals"></div>
+    <div class="gi-stars" id="giStars"></div>
+    <button class="btn btn-ghost btn-small gi-skip" id="btnGiSkip" type="button">Lewati →</button>
+    <div class="gi-stage">
+      <div class="gi-caption" id="giCaption">💌 Kamu dapat hadiah…</div>
+      <div class="gi-to" id="giTo">Hadiah untukmu 🌸</div>
+      <div class="gi-bouquet" id="giBouquet"></div>
+      <div class="gi-letter-wrap" id="giLetterWrap">
+        <div class="gi-hint" id="giHint">Siapkan hatimu… ✨</div>
+        <div class="envelope gi-envelope" id="giEnvelope" role="button" tabindex="0" aria-label="Buka surat">
+          <div class="envelope-body"></div>
+          <div class="flap"></div>
+          <div class="seal" id="giSeal">❤</div>
+        </div>
+        <div class="letter-paper static gi-letter" id="giLetter"></div>
+        <button class="btn btn-primary" id="btnGiOpen" type="button" style="display:none">💐 Lihat Buket Lengkap</button>
+      </div>
+    </div>
+  </div>
+
   <!-- PREVIEW OVERLAY (Step 4) -->
   <div class="preview-overlay" id="previewOverlay" aria-hidden="true">
     <div class="preview-shell">
@@ -413,6 +435,6 @@ Selalu milikmu,</textarea>
 
   <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
   <script src="js/flowers-data.js?v=20260912c"></script>
-  <script src="js/app.js?v=20260912g"></script>
+  <script src="js/app.js?v=20260912h"></script>
 </body>
 </html>
