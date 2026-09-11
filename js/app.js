@@ -167,29 +167,8 @@
     else showToast('Hadiah dibuka dari link 💌');
     if(fromURL) giftDiag('Link hadiah terbaca ✓ — menyiapkan intro…', true);
     else if(hasGiftParam) giftDiag('Link bermasalah (' + (giftLoadError || 'tidak-terbaca') + ') — minta kirim ulang', false);
-    loadGarden();
-
-    el.recipientInput.value = state.letter.recipient;
-    el.messageInput.value = state.letter.message || el.messageInput.value;
-    if(!state.letter.message) state.letter.message = el.messageInput.value;
-    el.senderInput.value = state.letter.sender;
-    if(el.ribbonTextInput) el.ribbonTextInput.value = state.ribbonText || 'WITH LOVE';
-    if(el.musicInput) el.musicInput.value = (state.music && state.music.url) || '';
-    syncFontPills();
-    syncCardStyle();
-    syncMode();
-    syncGreenery();
-
-    buildAlphabet();
-    bindEvents();
-    renderAll();
-    updateShareLink();
-    goStep(state.step || 1);
-    spawnAmbientPetals();
-    renderHeroPreview();
-    // Jika dibuka via link share (?gift=), mainkan opening sinematik dulu — biar pacar tidak lihat editor
+    // Timer gift dipasang PALING AWAL — biar init yang error di tengah tidak menggugurkan intro
     if(fromURL){
-      // delay sedikit biar DOM siap, lalu mainkan intro gift (anti-gagal-diam: fallback + pesan error)
       setTimeout(()=>{
         let ok = false, errMsg = '';
         try{
@@ -213,6 +192,32 @@
     } else if(hasGiftParam){
       // ada ?gift= tapi datanya tidak bisa dibaca (kepotong / kadaluarsa) — kasih tahu, jangan diam-diam buka studio
       setTimeout(()=> showToast('Link hadiah bermasalah (' + (giftLoadError || 'tidak-terbaca') + ') ⚠️ — minta kirim ulang link-nya', 8000), 800);
+    }
+    // sisa init dibungkus: error di sini tidak boleh membunuh timer gift di atas
+    try{
+      loadGarden();
+
+    el.recipientInput.value = state.letter.recipient;
+    el.messageInput.value = state.letter.message || el.messageInput.value;
+    if(!state.letter.message) state.letter.message = el.messageInput.value;
+    el.senderInput.value = state.letter.sender;
+    if(el.ribbonTextInput) el.ribbonTextInput.value = state.ribbonText || 'WITH LOVE';
+    if(el.musicInput) el.musicInput.value = (state.music && state.music.url) || '';
+    syncFontPills();
+    syncCardStyle();
+    syncMode();
+    syncGreenery();
+
+    buildAlphabet();
+    bindEvents();
+    renderAll();
+    updateShareLink();
+    goStep(state.step || 1);
+    spawnAmbientPetals();
+    renderHeroPreview();
+    }catch(initErr){
+      console.error('init gagal:', initErr);
+      giftDiag('Init error: ' + ((initErr && initErr.message) || String(initErr)), false);
     }
   }
 
@@ -423,9 +428,17 @@
     } catch(e){ giftLoadError = 'json-rusak:' + (e && e.message ? e.message : e); return false; }
   }
   let giftLoadError = '';
+  // Jaring terakhir: error JS apapun di mode gift langsung tampil di papan (tidak boleh diam)
+  window.addEventListener('error', (e)=>{
+    try{
+      if(!new URLSearchParams(location.search).has('gift')) return;
+      if(window._giftErrShown) return; window._giftErrShown = true;
+      const msg = (e && e.message) || (e && e.error && e.error.message) || 'unknown error';
+      giftDiag('JS error: ' + msg, false);
+    }catch(_){}
+  });
   // Papan status gift yg PERSISTEN (bukan toast) — untuk diagnosis yang tidak bisa kelewat
-  function giftDiag(msg, ok){
-    let bar = document.getElementById('giftDiagBar');
+  function giftDiag(msg, ok){    let bar = document.getElementById('giftDiagBar');
     if(!bar){
       bar = document.createElement('div');
       bar.id = 'giftDiagBar';
@@ -1261,6 +1274,7 @@
     }
     function openGiftIntro(){
       ensureGiftIntroDOM();
+      bindIntroControls();
       if(!el.giftIntro || !el.giBouquet || !el.giLetterWrap || !el.giEnvelope || !el.giTo || !el.giCaption || !el.giHint){
         throw new Error('komponen intro tidak ketemu (HTML lama? hard-refresh Ctrl+Shift+R)');
       }
@@ -1305,6 +1319,20 @@
       else if(!document.querySelector('.preview-overlay.open')) document.body.style.overflow = '';
     }
     window._openGiftIntro = openGiftIntro;
+    // binding tombol intro yg idempoten — dipanggil dari bindEvents DAN dari openGiftIntro
+    // (biar tombol tetap hidup walau bindEvents tidak selesai)
+    function bindIntroControls(){
+      const sk = document.getElementById('btnGiSkip');
+      if(sk && !sk.dataset.bound){ sk.dataset.bound = '1'; sk.addEventListener('click', ()=> closeGiftIntro(true)); }
+      const op = document.getElementById('btnGiOpen');
+      if(op && !op.dataset.bound){ op.dataset.bound = '1'; op.addEventListener('click', ()=> closeGiftIntro(true)); }
+      const ge = document.getElementById('giEnvelope');
+      if(ge && !ge.dataset.bound){
+        ge.dataset.bound = '1';
+        ge.addEventListener('click', openGiLetter);
+        ge.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openGiLetter(); } });
+      }
+    }
     // Bulletproof: kalau HTML yang ke-load basi (tanpa blok intro), bangun DOM intro dari JS
     function ensureGiftIntroDOM(){
       const ok = $('#giftIntro') && $('#giBouquet') && $('#giEnvelope') && $('#btnGiOpen') && $('#giLetterWrap');
@@ -1386,10 +1414,7 @@
     if(_btnCloseExpand) _btnCloseExpand.addEventListener('click', closeExpand);
     el.letterExpand.addEventListener('click', (e)=>{ if(e.target === el.letterExpand) closeExpand(); });
     // gift intro controls (guard: HTML basi tidak boleh mematikan binding lain)
-    const _giSkip = $('#btnGiSkip');
-    if(_giSkip) _giSkip.addEventListener('click', ()=> closeGiftIntro(true));
-    const _giOpen = $('#btnGiOpen');
-    if(_giOpen) _giOpen.addEventListener('click', ()=> closeGiftIntro(true));
+    bindIntroControls();
     if(el.giEnvelope){
       el.giEnvelope.addEventListener('click', openGiLetter);
       el.giEnvelope.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openGiLetter(); } });
